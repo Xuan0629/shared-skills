@@ -1,0 +1,133 @@
+# 共享 Skill 清单
+# 每个 skill 定义其在各 agent 中的元数据（触发条件、描述、分类）
+# 正文来自 ~/shared-skills/<name>/SKILL.md
+
+planning-with-files:
+  hermes:
+    category: productivity
+    triggers:
+      - "plan with files"
+      - "create a plan"
+      - "task plan"
+      - "制定计划"
+      - "分步计划"
+      - "multi step"
+      - "crash proof"
+  claude:
+    description: "Crash-proof persistent file-based planning. Creates task_plan.md, findings.md, and progress.md on disk so any agent can survive context loss, crashes, and /clear."
+  codex:
+    description: "Crash-proof persistent file-based planning. Creates task_plan.md, findings.md, and progress.md on disk."
+
+design-system:
+  hermes:
+    category: creative
+    triggers:
+      - "design system"
+      - "DESIGN.md"
+      - "UI design"
+      - "设计系统"
+      - "设计规范"
+      - "visual identity"
+      - "frontend style"
+      - "CSS tokens"
+      - "UI tokens"
+      - "生成前端"
+      - "build UI"
+      - "design tokens"
+  claude:
+    description: "Global design system specification for all agent-generated UIs. Provides machine-readable design tokens and human-readable rules for HTML/CSS/JS generation."
+  codex:
+    description: "Global design system specification for agent-generated UIs. Provides design tokens (HSL colors, typography, spacing) and rules for frontend generation."
+
+role-play:
+  hermes:
+    category: productivity
+    triggers:
+      - "role play"
+      - "扮演"
+      - "as a"
+      - "act as"
+      - "以.*身份"
+      - "假装你是"
+      - "你是.*角色"
+      - "switch role"
+  claude:
+    description: "Assign a specific professional role before a task. Supports 8 roles: CEO, Designer, Eng Manager, QA, Release Manager, Doc Engineer, Security Auditor, Performance Engineer."
+  codex:
+    description: "Assign a specific professional role before a task. Supports 8 predefined roles."
+
+handoff:
+  hermes:
+    category: devops
+    triggers:
+      - "handoff"
+      - "交接"
+      - "hand over"
+      - "转交"
+      - "给下一个 agent"
+      - "把上下文给"
+  claude:
+    description: "Compress current conversation into a handoff document for another agent to continue. Answers: what was done, current status, next steps. Saves to ~/repos/_handoffs/."
+  codex:
+    description: "Compress current conversation into a handoff document for another agent."
+
+codebase-design:
+  hermes:
+    category: software-development
+    triggers:
+      - "codebase design"
+      - "架构评估"
+      - "设计质量"
+      - "模块边界"
+      - "understand the architecture"
+  claude:
+    description: "Analyze codebase architecture: module boundaries, dependency direction, abstraction levels, SOLID principles. Score each dimension with file-path evidence."
+  codex:
+    description: "Analyze codebase architecture: modules, dependencies, abstractions."
+
+domain-modeling:
+  hermes:
+    category: software-development
+    triggers:
+      - "domain model"
+      - "领域模型"
+      - "bounded context"
+      - "聚合根"
+      - "domain driven"
+      - "业务术语"
+      - "model the domain"
+  claude:
+    description: "Extract domain model from codebase: core entities, aggregate roots, value objects, domain events, bounded contexts. Produces a business model independent of tech implementation."
+  codex:
+    description: "Extract domain model from codebase: entities, value objects, bounded contexts."
+
+diagnosing-bugs:
+  hermes:
+    category: software-development
+    triggers:
+      - "diagnosing bugs"
+      - "diagnose"
+      - "bug 诊断"
+      - "排查"
+      - "根因分析"
+      - "root cause"
+      - "debugging systematically"
+  claude:
+    description: "Systematic bug diagnosis: reproduce first, read full error trace, change one variable at a time, find root cause. Anti-patterns: shotgun debugging, workaround over root cause."
+  codex:
+    description: "Systematic bug diagnosis: reproduce, read error, one variable at a time, find root cause."
+
+grill-design:
+  hermes:
+    category: software-development
+    triggers:
+      - "grill"
+      - "grill me"
+      - "审查这个设计"
+      - "帮我打磨方案"
+      - "这个方案有什么漏洞"
+      - "检查设计"
+  claude:
+    description: "Deep design review: ask one question at a time along the design tree, provide recommended answers, document all decisions. End when all branches are resolved."
+  codex:
+    description: "Deep design review: one question at a time, document decisions."

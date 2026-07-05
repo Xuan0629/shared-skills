@@ -1,0 +1,13 @@
+version: "2.0"
+project_root: "/home/sean/shared-skills"
+mode: "code-dev"
+agents:
+  developer: {role: developer, runtime: claude, model: claude-sonnet-4-6, system_prompt_path: "/home/sean/shared-skills/.unison/prompts/dev-p2.md", pipeline_role: developer}
+  reviewer:  {role: reviewer,  runtime: codex, model: gpt-5.5, system_prompt_path: "/home/sean/shared-skills/.unison/prompts/review-generic.md", pipeline_role: reviewer}
+project:
+  test_command: "python3 sync-skills.py --check 2>&1 | head -5"
+  max_iterations: 3
+  per_agent_timeout: 600
+budget:
+  daily_token_limit: 5000000
+  per_task_limit: 500000

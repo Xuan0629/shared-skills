@@ -5,6 +5,7 @@
 用法: python3 sync-skills.sh [--dry-run] [skill-name]
 """
 
+import hashlib
 import os
 import sys
 import yaml
@@ -63,7 +64,46 @@ def list_scripts(skill_name: str) -> list[Path]:
     return []
 
 
-def build_hermes_frontmatter(skill_name: str, meta: dict) -> str:
+def compute_source_hash(skill_name: str, meta: dict) -> str:
+    """Compute SHA256 hash of raw SKILL.md + serialized manifest metadata.
+
+    This hash captures the full shared source for a skill — both its body
+    and its agent-specific metadata (triggers, categories, descriptions).
+    Any change to either will produce a different hash, which --check uses
+    to detect outdated agent copies.
+    """
+    skill_path = SHARED / skill_name / "SKILL.md"
+    skill_bytes = skill_path.read_bytes()
+    meta_bytes = yaml.dump(meta, sort_keys=True, allow_unicode=True).encode("utf-8")
+    combined = skill_bytes + b"\n---META---\n" + meta_bytes
+    return hashlib.sha256(combined).hexdigest()
+
+
+def parse_frontmatter(filepath: Path) -> dict | None:
+    """Parse YAML frontmatter from a SKILL.md file.
+
+    Returns the parsed dict on success, None if the file is missing,
+    has no frontmatter, or the YAML is invalid.
+    """
+    if not filepath.exists():
+        return None
+    content = filepath.read_text()
+    if not content.startswith("---"):
+        return None
+    end = content.find("---", 3)
+    if end == -1:
+        return None
+    fm_text = content[3:end].strip()
+    if not fm_text:
+        return None
+    try:
+        parsed = yaml.safe_load(fm_text)
+        return parsed if isinstance(parsed, dict) else None
+    except yaml.YAMLError:
+        return None
+
+
+def build_hermes_frontmatter(skill_name: str, meta: dict, source_hash: str = "") -> str:
     """生成 Hermes 格式的 YAML frontmatter（含 triggers）。"""
     triggers = meta.get("hermes", {}).get("triggers", [])
     description = meta.get("claude", {}).get("description", skill_name)
@@ -76,11 +116,13 @@ def build_hermes_frontmatter(skill_name: str, meta: dict) -> str:
                 lines.append(f'  - "{t}"')
             else:
                 lines.append(f"  - {t}")
+    if source_hash:
+        lines.append(f"source_hash: {source_hash}")
     lines.append("---")
     return "\n".join(lines)
 
 
-def build_claude_frontmatter(skill_name: str, meta: dict) -> str:
+def build_claude_frontmatter(skill_name: str, meta: dict, source_hash: str = "") -> str:
     """生成 Claude Code 格式的 YAML frontmatter。"""
     description = meta.get("claude", {}).get("description", skill_name)
     lines = [
@@ -93,21 +135,31 @@ def build_claude_frontmatter(skill_name: str, meta: dict) -> str:
         "  - Read",
         "  - Glob",
         "  - Grep",
-        "---",
     ]
+    if source_hash:
+        lines.append(f"source_hash: {source_hash}")
+    lines.append("---")
     return "\n".join(lines)
 
 
-def build_codex_frontmatter(skill_name: str, meta: dict) -> str:
+def build_codex_frontmatter(skill_name: str, meta: dict, source_hash: str = "") -> str:
     """生成 Codex 格式的 YAML frontmatter。"""
     description = meta.get("codex", {}).get("description", skill_name)
-    return f"---\nname: {skill_name}\ndescription: {description}\n---"
+    lines = ["---", f"name: {skill_name}", f"description: {description}"]
+    if source_hash:
+        lines.append(f"source_hash: {source_hash}")
+    lines.append("---")
+    return "\n".join(lines)
 
 
-def build_openclaw_frontmatter(skill_name: str, meta: dict) -> str:
+def build_openclaw_frontmatter(skill_name: str, meta: dict, source_hash: str = "") -> str:
     """生成 OpenClaw 格式的 YAML frontmatter。"""
     description = meta.get("codex", {}).get("description", skill_name)
-    return f"---\nname: {skill_name}\ndescription: {description}\n---"
+    lines = ["---", f"name: {skill_name}", f"description: {description}"]
+    if source_hash:
+        lines.append(f"source_hash: {source_hash}")
+    lines.append("---")
+    return "\n".join(lines)
 
 
 def inline_references(body: str, skill_name: str) -> str:
@@ -127,13 +179,14 @@ def sync_skill(skill_name: str, meta: dict, dry_run: bool = False):
     body = read_body(skill_name)
     refs = list_references(skill_name)
     scripts = list_scripts(skill_name)
+    source_hash = compute_source_hash(skill_name, meta)
 
     print(f"\n{'[DRY RUN] ' if dry_run else ''}Syncing: {skill_name}")
 
     # --- Hermes ---
     category = meta.get("hermes", {}).get("category", "shared")
     hermes_path = AGENT_CONFIGS["hermes"]["base"] / category / skill_name / "SKILL.md"
-    hermes_body = build_hermes_frontmatter(skill_name, meta) + "\n\n" + inline_references(body, skill_name)
+    hermes_body = build_hermes_frontmatter(skill_name, meta, source_hash) + "\n\n" + inline_references(body, skill_name)
     if dry_run:
         print(f"  → Hermes: {hermes_path}")
     else:
@@ -143,7 +196,7 @@ def sync_skill(skill_name: str, meta: dict, dry_run: bool = False):
 
     # --- Claude Code ---
     claude_path = AGENT_CONFIGS["claude"]["base"] / skill_name / "SKILL.md"
-    claude_body = build_claude_frontmatter(skill_name, meta) + "\n\n" + body
+    claude_body = build_claude_frontmatter(skill_name, meta, source_hash) + "\n\n" + body
     # Claude Code keeps references/ as separate files
     if dry_run:
         print(f"  → Claude: {claude_path}")
@@ -161,7 +214,7 @@ def sync_skill(skill_name: str, meta: dict, dry_run: bool = False):
 
     # --- Codex ---
     codex_path = AGENT_CONFIGS["codex"]["base"] / skill_name / "SKILL.md"
-    codex_body = build_codex_frontmatter(skill_name, meta) + "\n\n" + inline_references(body, skill_name)
+    codex_body = build_codex_frontmatter(skill_name, meta, source_hash) + "\n\n" + inline_references(body, skill_name)
     if dry_run:
         print(f"  → Codex: {codex_path}")
     else:
@@ -171,7 +224,7 @@ def sync_skill(skill_name: str, meta: dict, dry_run: bool = False):
 
     # --- OpenClaw ---
     openclaw_path = AGENT_CONFIGS["openclaw"]["base"] / skill_name / "SKILL.md"
-    openclaw_body = build_openclaw_frontmatter(skill_name, meta) + "\n\n" + body
+    openclaw_body = build_openclaw_frontmatter(skill_name, meta, source_hash) + "\n\n" + body
     if dry_run:
         print(f"  → OpenClaw: {openclaw_path}")
     else:
@@ -193,20 +246,84 @@ def sync_skill(skill_name: str, meta: dict, dry_run: bool = False):
         print(f"  ✓ OpenClaw: {openclaw_path} (+ {len(refs)} refs, + {len(scripts)} scripts)")
 
 
-def main():
-    dry_run = "--dry-run" in sys.argv
+def get_agent_skill_path(agent: str, skill_name: str, meta: dict) -> Path | None:
+    """Return the Path to an agent's copy of a skill, or None if the agent
+    has no config for this skill type."""
+    config = AGENT_CONFIGS.get(agent)
+    if not config:
+        return None
+    base = config["base"]
+    if agent == "hermes":
+        category = meta.get("hermes", {}).get("category", "shared")
+        return base / category / skill_name / "SKILL.md"
+    return base / skill_name / "SKILL.md"
 
-    # Target specific skill(s) or all
-    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+
+def check_skills(verbose: bool = False, targets: list[str] | None = None):
+    """Scan agent skill copies and compare stored source_hash against current source.
+
+    For each skill in the manifest and each configured agent, reports:
+    - UP-TO-DATE: stored hash matches current source
+    - OUTDATED: stored hash differs from current source (agent copy is stale)
+    - MISSING: no agent copy found, or no source_hash in its frontmatter
+
+    If targets is provided, only check skills whose names are in the list.
+    """
     manifest = load_manifest()
 
-    if args:
-        targets = [a for a in args if a in manifest]
+    # Agent display order
+    agent_names = list(AGENT_CONFIGS.keys())
+
+    for skill_name, meta in manifest.items():
+        if targets and skill_name not in targets:
+            continue
+        current_hash = compute_source_hash(skill_name, meta)
+        print(f"{skill_name}:")
+        for agent in agent_names:
+            path = get_agent_skill_path(agent, skill_name, meta)
+            if path is None:
+                continue
+            fm = parse_frontmatter(path)
+            if fm is None:
+                print(f"  {agent}: MISSING")
+                continue
+            stored_hash = fm.get("source_hash")
+            if not stored_hash:
+                print(f"  {agent}: MISSING")
+            elif stored_hash == current_hash:
+                if verbose:
+                    print(f"  {agent}: UP-TO-DATE ({current_hash[:12]})")
+                else:
+                    print(f"  {agent}: UP-TO-DATE")
+            else:
+                short_current = current_hash[:12]
+                short_stored = stored_hash[:12] if len(stored_hash) >= 12 else stored_hash
+                if verbose:
+                    print(f"  {agent}: OUTDATED ({short_stored} vs {short_current})")
+                else:
+                    print(f"  {agent}: OUTDATED ({short_stored} vs {short_current})")
+
+
+def main():
+    dry_run = "--dry-run" in sys.argv
+    check_mode = "--check" in sys.argv
+    verbose = "--verbose" in sys.argv
+
+    # Target specific skill(s) or all
+    positional_args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    manifest = load_manifest()
+
+    if positional_args:
+        targets = [a for a in positional_args if a in manifest]
         if not targets:
-            print(f"No skills found: {args}")
+            print(f"No skills found: {positional_args}")
             sys.exit(1)
     else:
         targets = list(manifest.keys())
+
+    if check_mode:
+        check_skills(verbose=verbose, targets=targets)
+        return
 
     print(f"Sync source: {SHARED}")
     print(f"Targets: {', '.join(targets)}")

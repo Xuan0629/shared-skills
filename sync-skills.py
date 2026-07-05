@@ -154,7 +154,7 @@ def build_codex_frontmatter(skill_name: str, meta: dict, source_hash: str = "") 
 
 def build_openclaw_frontmatter(skill_name: str, meta: dict, source_hash: str = "") -> str:
     """生成 OpenClaw 格式的 YAML frontmatter。"""
-    description = meta.get("codex", {}).get("description", skill_name)
+    description = meta.get("openclaw", {}).get("description", skill_name)
     lines = ["---", f"name: {skill_name}", f"description: {description}"]
     if source_hash:
         lines.append(f"source_hash: {source_hash}")

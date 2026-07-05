@@ -1,0 +1,287 @@
+=== COMMAND ===
+claude -p --dangerously-skip-permissions Iteration 2 — Developer Operational Constraints:
+- Read prd/PRD.md and prd/tech-design.md for requirements context
+- Run tests after changes: python3 sync-skills.py --check 2>&1 | head -5
+- Commit with: git add -A && git commit -m '<descriptive message>'
+- Follow the Developer Instructions below for your specific task
+
+# P2: Source Hash + --check Mode
+
+## Goal
+Track skill versions and detect when agent copies are outdated.
+
+## Implementation
+1. In sync-skills.py, before writing a skill to an agent directory:
+   - Compute SHA256 of (SKILL.md + meta.yaml)
+   - Write `source_hash: <sha256>` into the generated frontmatter
+2. Add `--check` CLI argument:
+   - Scan each agent's skill directory
+   - Compare stored source_hash against current shared source
+   - Report: "UP-TO-DATE", "OUTDATED", or "MISSING" for each skill-agent pair
+3. Add `--verbose` flag to show hash values
+
+Example output:
+```
+planning-with-files:
+  hermes: OUTDATED (abc123 vs def456)
+  claude: UP-TO-DATE
+  codex: MISSING
+```
+
+Run test and commit.
+
+## Phase Status
+mode: code-dev, phase: dev, iteration: 2/3, prev_verdict: REQUEST_CHANGES, budget_remaining: 497282 tokens
+
+## Last Review Findings
+[INFO] severity: blocker
+[INFO] .unison/pipelines/p0.yaml:8
+[INFO] .unison/pipelines/p1.yaml:8
+
+## Git Diff
+diff --git a/.unison/pipelines/p0.yaml b/.unison/pipelines/p0.yaml
+new file mode 100644
+index 0000000..86cbcfc
+--- /dev/null
++++ b/.unison/pipelines/p0.yaml
+@@ -0,0 +1,13 @@
++version: "2.0"
++project_root: "/home/sean/shared-skills"
++mode: "code-dev"
++agents:
++  developer: {role: developer, runtime: claude, model: claude-sonnet-4-6, system_prompt_path: "/home/sean/shared-skills/.unison/prompts/dev-p0.md", pipeline_role: developer}
++  reviewer:  {role: reviewer,  runtime: codex, model: gpt-5.5, system_prompt_path: "/home/sean/shared-skills/.unison/prompts/review-generic.md", pipeline_role: reviewer}
++project:
++  test_command: "python3 -c "import yaml; m=yaml.safe_load(open('skills-manifest.yaml')); assert all(k in m for k in ['planning-with-files','design-system']); print('OK')""
++  max_iterations: 3
++  per_agent_timeout: 600
++budget:
++  daily_token_limit: 5000000
++  per_task_limit: 500000
+diff --git a/.unison/pipelines/p1.yaml b/.unison/pipelines/p1.yaml
+new file mode 100644
+index 0000000..a78ed5f
+--- /dev/null
++++ b/.unison/pipelines/p1.yaml
+@@ -0,0 +1,13 @@
++version: "2.0"
++project_root: "/home/sean/shared-skills"
++mode: "code-dev"
++agents:
++  developer: {role: developer, runtime: claude, model: claude-sonnet-4-6, system_prompt_path: "/home/sean/shared-skills/.unison/prompts/dev-p1.md", pipeline_role: developer}
++  reviewer:  {role: reviewer,  runtime: codex, model: gpt-5.5, system_prompt_path: "/home/sean/shared-skills/.unison/prompts/review-generic.md", pipeline_role: reviewer}
++project:
++  test_command: "python3 -c "import os,yaml; [print(f'{d}: OK') for d in os.listdir('.') if os.path.isdir(d) and not d.startswith('.') and os.path.exists(f'{d}/meta.yaml')]""
++  max_iterations: 3
++  per_agent_timeout: 600
++budget:
++  daily_token_limit: 5000000
++  per_task_limit: 500000
+diff --git a/.unison/pipelines/p2.yaml b/.unison/pipelines/p2.yaml
+new file mode 100644
+index 0000000..bf8798a
+--- /dev/null
++++ b/.unison/pipelines/p2.yaml
+@@ -0,0 +1,13 @@
++version: "2.0"
++project_root: "/home/sean/shared-skills"
++mode: "code-dev"
++agents:
++  developer: {role: developer, runtime: claude, model: claude-sonnet-4-6, system_prompt_path: "/home/sean/shared-skills/.unison/prompts/dev-p2.md", pipeline_role: developer}
++  reviewer:  {role: reviewer,  runtime: codex, model: gpt-5.5, system_prompt_path: "/home/sean/shared-skills/.unison/prompts/review-generic.md", pipeline_role: reviewer}
++project:
++  test_command: "python3 sync-skills.py --check 2>&1 | head -5"
++  max_iterations: 3
++  per_agent_timeout: 600
++budget:
++  daily_token_limit: 5000000
++  per_task_limit: 500000
+diff --git a/.unison/pipelines/p3.yaml b/.unison/pipelines/p3.yaml
+new file mode 100644
+index 0000000..c724c94
+--- /dev/null
++++ b/.unison/pipelines/p3.yaml
+@@ -0,0 +1,13 @@
++version: "2.0"
++project_root: "/home/sean/shared-skills"
++mode: "code-dev"
++agents:
++  developer: {role: developer, runtime: claude, model: claude-sonnet-4-6, system_prompt_path: "/home/sean/shared-skills/.unison/prompts/dev-p3.md", pipeline_role: developer}
++  reviewer:  {role: reviewer,  runtime: codex, model: gpt-5.5, system_prompt_path: "/home/sean/shared-skills/.unison/prompts/review-generic.md", pipeline_role: reviewer}
++project:
++  test_command: "python3 -c "import json; [print(json.loads(l)['skill']) for l in open('sync.log') if l.strip()]" 2>/dev/null || python3 -c "print('sync log will be created on first sync')""
++  max_iterations: 3
++  per_agent_timeout: 600
++budget:
++  daily_token_limit: 5000000
++  per_task_limit: 500000
+diff --git a/.unison/prompts/dev-p0.md b/.unison/prompts/dev-p0.md
+new file mode 100644
+index 0000000..25f3e5f
+--- /dev/null
++++ b/.unison/prompts/dev-p0.md
+@@ -0,0 +1,13 @@
++# P0: Fix OpenClaw Bug + Schema Validation
++
++## Bug: OpenClaw description reads from codex
++In sync-skills.py, find `build_openclaw_frontmatter()`. It reads description from `meta.get("codex", ...)` instead of `meta.get("openclaw", ...)`. Fix it.
++
++## Add: Manifest Schema Validation
++Add a `validate_manifest()` function that checks:
++- Every skill name in manifest has a corresponding directory with SKILL.md
++- Every agent name is one of: hermes, claude, codex, openclaw
++- Every skill has at least one trigger/description
++- Raise clear errors (not silent skip) on invalid entries
++
++Run test command. Commit fixes.
+\ No newline at end of file
+diff --git a/.unison/prompts/dev-p1.md b/.unison/prompts/dev-p1.md
+new file mode 100644
+index 0000000..3c81e68
+--- /dev/null
++++ b/.unison/prompts/dev-p1.md
+@@ -0,0 +1,37 @@
++# P1: Manifest Split — meta.yaml Per Skill
++
++## Goal
++Move agent metadata from the monolithic `skills-manifest.yaml` into per-skill `meta.yaml` files.
++
++## New Structure
++```
++~/shared-skills/planning-with-files/
++  SKILL.md
++  meta.yaml          ← NEW: agent metadata, version, sync_to list
++  references/
++  scripts/
++
++~/shared-skills/skills-manifest.yaml  ← degraded to index: [skill1, skill2, ...]
++```
++
++## meta.yaml Format
++```yaml
++version: "1.0.0"
++sync_to: [hermes, claude, codex]
++hermes:
++  category: productivity
++  triggers: ["plan with files", "制定计划"]
++claude:
++  description: "Crash-proof persistent file-based planning"
++  allowed-tools: [Bash, Read, Glob]
++codex:
++  description: "Crash-proof persistent file-based planning"
++```
++
++## Implementation
++1. Create `meta.yaml` in each of the 8 skill directories with existing metadata from skills-manifest.yaml
++2. Update `skills-manifest.yaml` to be a simple list: `[planning-with-files, design-system, ...]`
++3. Update `sync-skills.py` to read from per-skill meta.yaml instead of the big manifest
++4. Add `sync_to` field support — only sync to agents listed in sync_to
++
++Run test command. Commit.
+\ No newline at end of file
+diff --git a/.unison/prompts/dev-p2.md b/.unison/prompts/dev-p2.md
+new file mode 100644
+index 0000000..01d9b1f
+--- /dev/null
++++ b/.unison/prompts/dev-p2.md
+@@ -0,0 +1,24 @@
++# P2: Source Hash + --check Mode
++
++## Goal
++Track skill versions and detect when agent copies are outdated.
++
++## Implementation
++1. In sync-skills.py, before writing a skill to an agent directory:
++   - Compute SHA256 of (SKILL.md + meta.yaml)
++   - Write `source_hash: <sha256>` into the generated frontmatter
++2. Add `--check` CLI argument:
++   - Scan each agent's skill directory
++   - Compare stored source_hash against current shared source
++   - Report: "UP-TO-DATE", "OUTDATED", or "MISSING" for each skill-agent pair
++3. Add `--verbose` flag to show hash values
++
++Example output:
++```
++planning-with-files:
++  hermes: OUTDATED (abc123 vs def456)
++  claude: UP-TO-DATE
++  codex: MISSING
++```
++
++Run test and commit.
+\ No newline at end of file
+diff --git a/.unison/prompts/dev-p3.md b/.unison/prompts/dev-p3.md
+new file mode 100644
+index 0000000..1db8992
+--- /dev/null
++++ b/.unison/prompts/dev-p3.md
+@@ -0,0 +1,15 @@
++# P3: Sync Log
++
++## Goal
++Record every sync operation for audit trail.
++
++## Implementation
++1. Create `sync.log` in `~/shared-skills/` (JSON Lines format)
++2. For each skill synced, append a line:
++   ```json
++   {"timestamp":"2026-07-06T12:00:00Z","skill":"planning-with-files","agent":"hermes","action":"updated","hash_before":"abc123","hash_after":"def456"}
++   ```
++3. Log actions: "created", "updated", "skipped" (unchanged), "removed"
++4. Add `--show-log` CLI flag to display recent sync history
++
++Run test and commit.
+\ No newline at end of file
+diff --git a/.unison/prompts/review-generic.md b/.unison/prompts/review-generic.md
+new file mode 100644
+index 0000000..83bc2b1
+--- /dev/null
++++ b/.unison/prompts/review-generic.md
+@@ -0,0 +1,11 @@
++# Reviewer
++Review developer output. Run test command. Write to reviews/iter-N.md:
++```yaml
++---
++verdict: PASS
++summary: "one-line"
++findings:
++  - severity: blocker|major|minor
++    category: correctness|security|completeness
++    summary: "brief"
++```
+diff --git a/.unison/run.log b/.unison/run.log
+new file mode 100644
+index 0000000..23ce744
+--- /dev/null
++++ b/.unison/run.log
+@@ -0,0 +1,113 @@
++
++=== p0 2026年 07月 06日 星期一 02:04:03 HKT ===
++Traceback (most recent call last):
++  File "/home/sean/.local/bin/unison", line 6, in <module>
++    sys.exit(main())
++             ^^^^^^
++  File "/home/sean/projects/unison/sr
+...[diff truncated]
+
+## Cumulative Changes (since loop start)
+ .unison/pipelines/p0.yaml                          |  13 ++
+ .unison/pipelines/p1.yaml                          |  13 ++
+ .unison/pipelines/p2.yaml                          |  13 ++
+ .unison/pipelines/p3.yaml                          |  13 ++
+ .unison/prompts/dev-p0.md                          |  13 ++
+ .unison/prompts/dev-p1.md                          |  37 ++++++
+ .unison/prompts/dev-p2.md                          |  24 ++++
+ .unison/prompts/dev-p3.md                          |  15 +++
+ .unison/prompts/review-generic.md                  |  11 ++
+ .unison/run.log                                    | 113 ++++++++++++++++
+ .../logs/developer_iter-1_20260705T180405Z.log     |  36 +++++
+ reviews/acceptance-criteria.md                     |  17 +++
+ sync-skills.py                                     | 147 ++++++++++++++++++---
+ 13 files changed, 450 insertions(+), 15 deletions(-)
+
+
+## Finding Status (carry-forward)
+(no findings to carry forward)
+
+=== OUTPUT ===

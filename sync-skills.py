@@ -64,17 +64,18 @@ def list_scripts(skill_name: str) -> list[Path]:
     return []
 
 
-def compute_source_hash(skill_name: str, meta: dict) -> str:
-    """Compute SHA256 hash of raw SKILL.md + serialized manifest metadata.
+def compute_source_hash(skill_name: str) -> str:
+    """Compute SHA256 hash of SKILL.md + meta.yaml (the per-skill metadata file).
 
     This hash captures the full shared source for a skill — both its body
     and its agent-specific metadata (triggers, categories, descriptions).
-    Any change to either will produce a different hash, which --check uses
-    to detect outdated agent copies.
+    Any change to either file will produce a different hash, which --check
+    uses to detect outdated agent copies.
     """
     skill_path = SHARED / skill_name / "SKILL.md"
+    meta_path = SHARED / skill_name / "meta.yaml"
     skill_bytes = skill_path.read_bytes()
-    meta_bytes = yaml.dump(meta, sort_keys=True, allow_unicode=True).encode("utf-8")
+    meta_bytes = meta_path.read_bytes()
     combined = skill_bytes + b"\n---META---\n" + meta_bytes
     return hashlib.sha256(combined).hexdigest()
 
@@ -103,11 +104,24 @@ def parse_frontmatter(filepath: Path) -> dict | None:
         return None
 
 
+def _yaml_safe(value: str) -> str:
+    """Quote a string value for safe inclusion in YAML frontmatter.
+
+    Strings containing YAML-significant characters (colons, hashes, etc.)
+    are double-quoted to prevent parser errors.
+    """
+    if any(c in value for c in ':#{}[]>,|*&!%@`\''):
+        # Escape backslashes and double quotes within the string
+        escaped = value.replace('\\', '\\\\').replace('"', '\\"')
+        return f'"{escaped}"'
+    return value
+
+
 def build_hermes_frontmatter(skill_name: str, meta: dict, source_hash: str = "") -> str:
     """生成 Hermes 格式的 YAML frontmatter（含 triggers）。"""
     triggers = meta.get("hermes", {}).get("triggers", [])
     description = meta.get("claude", {}).get("description", skill_name)
-    lines = ["---", f"name: {skill_name}", f"description: {description}"]
+    lines = ["---", f"name: {skill_name}", f"description: {_yaml_safe(description)}"]
     if triggers:
         lines.append("triggers:")
         for t in triggers:
@@ -128,7 +142,7 @@ def build_claude_frontmatter(skill_name: str, meta: dict, source_hash: str = "")
     lines = [
         "---",
         f"name: {skill_name}",
-        f"description: {description}",
+        f"description: {_yaml_safe(description)}",
         "version: 0.1.0",
         "allowed-tools:",
         "  - Bash",
@@ -145,7 +159,7 @@ def build_claude_frontmatter(skill_name: str, meta: dict, source_hash: str = "")
 def build_codex_frontmatter(skill_name: str, meta: dict, source_hash: str = "") -> str:
     """生成 Codex 格式的 YAML frontmatter。"""
     description = meta.get("codex", {}).get("description", skill_name)
-    lines = ["---", f"name: {skill_name}", f"description: {description}"]
+    lines = ["---", f"name: {skill_name}", f"description: {_yaml_safe(description)}"]
     if source_hash:
         lines.append(f"source_hash: {source_hash}")
     lines.append("---")
@@ -155,7 +169,7 @@ def build_codex_frontmatter(skill_name: str, meta: dict, source_hash: str = "") 
 def build_openclaw_frontmatter(skill_name: str, meta: dict, source_hash: str = "") -> str:
     """生成 OpenClaw 格式的 YAML frontmatter。"""
     description = meta.get("openclaw", {}).get("description", skill_name)
-    lines = ["---", f"name: {skill_name}", f"description: {description}"]
+    lines = ["---", f"name: {skill_name}", f"description: {_yaml_safe(description)}"]
     if source_hash:
         lines.append(f"source_hash: {source_hash}")
     lines.append("---")
@@ -179,7 +193,7 @@ def sync_skill(skill_name: str, meta: dict, dry_run: bool = False):
     body = read_body(skill_name)
     refs = list_references(skill_name)
     scripts = list_scripts(skill_name)
-    source_hash = compute_source_hash(skill_name, meta)
+    source_hash = compute_source_hash(skill_name)
 
     print(f"\n{'[DRY RUN] ' if dry_run else ''}Syncing: {skill_name}")
 
@@ -277,7 +291,7 @@ def check_skills(verbose: bool = False, targets: list[str] | None = None):
     for skill_name, meta in manifest.items():
         if targets and skill_name not in targets:
             continue
-        current_hash = compute_source_hash(skill_name, meta)
+        current_hash = compute_source_hash(skill_name)
         print(f"{skill_name}:")
         for agent in agent_names:
             path = get_agent_skill_path(agent, skill_name, meta)

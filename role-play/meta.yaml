@@ -1,0 +1,15 @@
+hermes:
+  category: productivity
+  triggers:
+    - "role play"
+    - "扮演"
+    - "as a"
+    - "act as"
+    - "以.*身份"
+    - "假装你是"
+    - "你是.*角色"
+    - "switch role"
+claude:
+  description: "Assign a specific professional role before a task. Supports 8 roles: CEO, Designer, Eng Manager, QA, Release Manager, Doc Engineer, Security Auditor, Performance Engineer."
+codex:
+  description: "Assign a specific professional role before a task. Supports 8 predefined roles."

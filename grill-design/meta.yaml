@@ -1,0 +1,13 @@
+hermes:
+  category: software-development
+  triggers:
+    - "grill"
+    - "grill me"
+    - "审查这个设计"
+    - "帮我打磨方案"
+    - "这个方案有什么漏洞"
+    - "检查设计"
+claude:
+  description: "Deep design review: ask one question at a time along the design tree, provide recommended answers, document all decisions. End when all branches are resolved."
+codex:
+  description: "Deep design review: one question at a time, document decisions."

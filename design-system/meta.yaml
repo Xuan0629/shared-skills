@@ -1,0 +1,19 @@
+hermes:
+  category: creative
+  triggers:
+    - "design system"
+    - "DESIGN.md"
+    - "UI design"
+    - "设计系统"
+    - "设计规范"
+    - "visual identity"
+    - "frontend style"
+    - "CSS tokens"
+    - "UI tokens"
+    - "生成前端"
+    - "build UI"
+    - "design tokens"
+claude:
+  description: "Global design system specification for all agent-generated UIs. Provides machine-readable design tokens and human-readable rules for HTML/CSS/JS generation."
+codex:
+  description: "Global design system specification for agent-generated UIs. Provides design tokens (HSL colors, typography, spacing) and rules for frontend generation."

@@ -1,14 +1,22 @@
+version: 1.0.0
+sync_to:
+- hermes
+- claude
+- codex
 hermes:
   category: software-development
   triggers:
-    - "diagnosing bugs"
-    - "diagnose"
-    - "bug 诊断"
-    - "排查"
-    - "根因分析"
-    - "root cause"
-    - "debugging systematically"
+  - diagnosing bugs
+  - diagnose
+  - bug 诊断
+  - 排查
+  - 根因分析
+  - root cause
+  - debugging systematically
 claude:
-  description: "Systematic bug diagnosis: reproduce first, read full error trace, change one variable at a time, find root cause. Anti-patterns: shotgun debugging, workaround over root cause."
+  description: 'Systematic bug diagnosis: reproduce first, read full error trace,
+    change one variable at a time, find root cause. Anti-patterns: shotgun debugging,
+    workaround over root cause.'
 codex:
-  description: "Systematic bug diagnosis: reproduce, read error, one variable at a time, find root cause."
+  description: 'Systematic bug diagnosis: reproduce, read error, one variable at a
+    time, find root cause.'

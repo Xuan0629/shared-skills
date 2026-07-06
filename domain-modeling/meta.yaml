@@ -1,14 +1,22 @@
+version: 1.0.0
+sync_to:
+- hermes
+- claude
+- codex
 hermes:
   category: software-development
   triggers:
-    - "domain model"
-    - "领域模型"
-    - "bounded context"
-    - "聚合根"
-    - "domain driven"
-    - "业务术语"
-    - "model the domain"
+  - domain model
+  - 领域模型
+  - bounded context
+  - 聚合根
+  - domain driven
+  - 业务术语
+  - model the domain
 claude:
-  description: "Extract domain model from codebase: core entities, aggregate roots, value objects, domain events, bounded contexts. Produces a business model independent of tech implementation."
+  description: 'Extract domain model from codebase: core entities, aggregate roots,
+    value objects, domain events, bounded contexts. Produces a business model independent
+    of tech implementation.'
 codex:
-  description: "Extract domain model from codebase: entities, value objects, bounded contexts."
+  description: 'Extract domain model from codebase: entities, value objects, bounded
+    contexts.'

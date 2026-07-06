@@ -1,14 +1,21 @@
+version: 1.0.0
+sync_to:
+- hermes
+- claude
+- codex
 hermes:
   category: productivity
   triggers:
-    - "plan with files"
-    - "create a plan"
-    - "task plan"
-    - "制定计划"
-    - "分步计划"
-    - "multi step"
-    - "crash proof"
+  - plan with files
+  - create a plan
+  - task plan
+  - 制定计划
+  - 分步计划
+  - multi step
+  - crash proof
 claude:
-  description: "Crash-proof persistent file-based planning. Creates task_plan.md, findings.md, and progress.md on disk so any agent can survive context loss, crashes, and /clear."
+  description: Crash-proof persistent file-based planning. Creates task_plan.md, findings.md,
+    and progress.md on disk so any agent can survive context loss, crashes, and /clear.
 codex:
-  description: "Crash-proof persistent file-based planning. Creates task_plan.md, findings.md, and progress.md on disk."
+  description: Crash-proof persistent file-based planning. Creates task_plan.md, findings.md,
+    and progress.md on disk.

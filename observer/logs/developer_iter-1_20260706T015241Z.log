@@ -242,3 +242,21 @@ index 0000000..49ca00a
 ...[diff truncated]
 
 === OUTPUT ===
+## Summary
+
+Both P0 tasks were already implemented and committed in the prior commit (`1b4b10c`). Here's the verification:
+
+### OpenClaw Bug — Already Fixed
+`sync-skills.py:230` correctly reads from `meta.get("openclaw", {})` — the bug where it read from `meta.get("codex", ...)` was fixed before this iteration.
+
+### Manifest Schema Validation — Already Implemented
+`validate_manifest()` at lines 45-99 checks all three requirements:
+- **Skill directory + SKILL.md exist** (lines 63-68) — raises clear errors
+- **Agent names validated** against `VALID_AGENTS` (lines 78-84)
+- **At least one trigger/description** per skill (lines 86-97)
+- Called in `main()` at line 390, exits with code 1 on validation failure
+
+### Verification
+- `echo OK` — passed
+- `python3 sync-skills.py --check` — all 8 skills UP-TO-DATE across all 4 agents
+- Committed observer logs as `c0c4061`

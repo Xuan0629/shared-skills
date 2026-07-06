@@ -1,13 +1,20 @@
+version: 1.0.0
+sync_to:
+- hermes
+- claude
+- codex
 hermes:
   category: devops
   triggers:
-    - "handoff"
-    - "交接"
-    - "hand over"
-    - "转交"
-    - "给下一个 agent"
-    - "把上下文给"
+  - handoff
+  - 交接
+  - hand over
+  - 转交
+  - 给下一个 agent
+  - 把上下文给
 claude:
-  description: "Compress current conversation into a handoff document for another agent to continue. Answers: what was done, current status, next steps. Saves to ~/repos/_handoffs/."
+  description: 'Compress current conversation into a handoff document for another
+    agent to continue. Answers: what was done, current status, next steps. Saves to
+    ~/repos/_handoffs/.'
 codex:
-  description: "Compress current conversation into a handoff document for another agent."
+  description: Compress current conversation into a handoff document for another agent.

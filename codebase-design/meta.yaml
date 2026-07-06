@@ -1,12 +1,18 @@
+version: 1.0.0
+sync_to:
+- hermes
+- claude
+- codex
 hermes:
   category: software-development
   triggers:
-    - "codebase design"
-    - "架构评估"
-    - "设计质量"
-    - "模块边界"
-    - "understand the architecture"
+  - codebase design
+  - 架构评估
+  - 设计质量
+  - 模块边界
+  - understand the architecture
 claude:
-  description: "Analyze codebase architecture: module boundaries, dependency direction, abstraction levels, SOLID principles. Score each dimension with file-path evidence."
+  description: 'Analyze codebase architecture: module boundaries, dependency direction,
+    abstraction levels, SOLID principles. Score each dimension with file-path evidence.'
 codex:
-  description: "Analyze codebase architecture: modules, dependencies, abstractions."
+  description: 'Analyze codebase architecture: modules, dependencies, abstractions.'

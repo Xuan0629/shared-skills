@@ -42,6 +42,21 @@ def load_manifest():
         return yaml.safe_load(f)
 
 
+
+def load_skill_meta(skill_name: str) -> dict:
+    """Load per-skill metadata from meta.yaml."""
+    meta_path = SHARED / skill_name / "meta.yaml"
+    if not meta_path.exists():
+        raise FileNotFoundError(f"meta.yaml not found for {skill_name}: {meta_path}")
+    with open(meta_path) as f:
+        return yaml.safe_load(f)
+
+def get_sync_targets(skill_name: str) -> list[str]:
+    """Return the list of agents this skill should sync to."""
+    meta = load_skill_meta(skill_name)
+    return meta.get("sync_to", list(VALID_AGENTS))
+
+
 def validate_manifest(manifest: dict) -> list[str]:
     """Validate the skills manifest. Returns a list of error messages (empty = valid).
 
@@ -96,6 +111,22 @@ def validate_manifest(manifest: dict) -> list[str]:
                 f"{skill_name}: no triggers or description defined for any agent"
             )
 
+        # Cross-validate manifest vs meta.yaml
+        meta_path = SHARED / skill_name / "meta.yaml"
+        if meta_path.exists():
+            try:
+                meta = yaml.safe_load(meta_path.read_text())
+                if isinstance(meta, dict):
+                    manifest_agents = set(agents.keys())
+                    meta_sync = set(meta.get("sync_to", []))
+                    if manifest_agents != meta_sync:
+                        errors.append(
+                            f"{skill_name}: manifest agents ({','.join(sorted(manifest_agents))}) "
+                            f"differ from meta.yaml sync_to ({','.join(sorted(meta_sync))})"
+                        )
+            except yaml.YAMLError:
+                errors.append(f"{skill_name}: meta.yaml is invalid YAML")
+
     return errors
 
 
@@ -134,6 +165,8 @@ def compute_source_hash(skill_name: str) -> str:
     skill_path = SHARED / skill_name / "SKILL.md"
     meta_path = SHARED / skill_name / "meta.yaml"
     skill_bytes = skill_path.read_bytes()
+    if not meta_path.exists():
+        raise FileNotFoundError(f"meta.yaml not found for {skill_name}: {meta_path}")
     meta_bytes = meta_path.read_bytes()
     combined = skill_bytes + b"\n---META---\n" + meta_bytes
     return hashlib.sha256(combined).hexdigest()
@@ -227,7 +260,9 @@ def build_codex_frontmatter(skill_name: str, meta: dict, source_hash: str = "") 
 
 def build_openclaw_frontmatter(skill_name: str, meta: dict, source_hash: str = "") -> str:
     """生成 OpenClaw 格式的 YAML frontmatter。"""
-    description = meta.get("openclaw", {}).get("description", skill_name)
+    claude_desc = meta.get("claude", {}).get("description", "")
+    openclaw_cfg = meta.get("openclaw", {})
+    description = openclaw_cfg.get("description") or claude_desc or skill_name
     lines = ["---", f"name: {skill_name}", f"description: {_yaml_safe(description)}"]
     if source_hash:
         lines.append(f"source_hash: {source_hash}")
@@ -247,77 +282,95 @@ def inline_references(body: str, skill_name: str) -> str:
     return "\n".join(parts)
 
 
+
+def log_sync(skill_name: str, agent: str, action: str, hash_before: str = "", hash_after: str = ""):
+    """Append a sync event to sync.log (JSON Lines format)."""
+    import json
+    from datetime import datetime, timezone
+    log_path = SHARED / "sync.log"
+    entry = {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "skill": skill_name,
+        "agent": agent,
+        "action": action,
+        "hash_before": hash_before,
+        "hash_after": hash_after,
+    }
+    with open(log_path, 'a') as f:
+        f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+
+def show_log(n: int = 20):
+    """Display the last N sync log entries."""
+    log_path = SHARED / "sync.log"
+    if not log_path.exists():
+        print("(no sync log yet)")
+        return
+    lines = log_path.read_text().strip().split("\n")
+    for line in lines[-n:]:
+        import json
+        e = json.loads(line)
+        print(f"{e['timestamp'][:19]}  {e['skill']:25s} → {e['agent']:10s}  {e['action']}")
+
+
 def sync_skill(skill_name: str, meta: dict, dry_run: bool = False):
-    """同步单个 skill 到所有 agent。"""
+    """同步单个 skill 到 sync_to 中列出的 agent。"""
     body = read_body(skill_name)
     refs = list_references(skill_name)
     scripts = list_scripts(skill_name)
     source_hash = compute_source_hash(skill_name)
+    sync_targets = get_sync_targets(skill_name)
 
-    print(f"\n{'[DRY RUN] ' if dry_run else ''}Syncing: {skill_name}")
+    print(f"\n{'[DRY RUN] ' if dry_run else ''}Syncing: {skill_name} (→ {', '.join(sync_targets)})")
 
-    # --- Hermes ---
-    category = meta.get("hermes", {}).get("category", "shared")
-    hermes_path = AGENT_CONFIGS["hermes"]["base"] / category / skill_name / "SKILL.md"
-    hermes_body = build_hermes_frontmatter(skill_name, meta, source_hash) + "\n\n" + inline_references(body, skill_name)
-    if dry_run:
-        print(f"  → Hermes: {hermes_path}")
-    else:
-        hermes_path.parent.mkdir(parents=True, exist_ok=True)
-        hermes_path.write_text(hermes_body)
-        print(f"  ✓ Hermes: {hermes_path}")
+    # Helper: sync to one agent
+    def _do_agent(agent, build_fn, extra_fn=None):
+        if agent not in sync_targets:
+            print(f"  - {agent} (skipped)")
+            return
+        config = AGENT_CONFIGS[agent]
+        path = get_agent_skill_path(agent, skill_name, meta)
+        if path is None:
+            return
+        content = build_fn(skill_name, meta, source_hash) + "\n\n"
+        if agent in ("hermes", "codex"):
+            content += inline_references(body, skill_name)
+        else:
+            content += body
+        if dry_run:
+            print(f"  → {agent}: {path}")
+        else:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(content)
+            print(f"  ✓ {agent}: {path}")
+            if extra_fn:
+                extra_fn(path.parent)
+            log_sync(skill_name, agent, "updated", hash_after=source_hash)
 
-    # --- Claude Code ---
-    claude_path = AGENT_CONFIGS["claude"]["base"] / skill_name / "SKILL.md"
-    claude_body = build_claude_frontmatter(skill_name, meta, source_hash) + "\n\n" + body
-    # Claude Code keeps references/ as separate files
-    if dry_run:
-        print(f"  → Claude: {claude_path}")
-    else:
-        claude_path.parent.mkdir(parents=True, exist_ok=True)
-        claude_path.write_text(claude_body)
-        # Copy references as separate files for Claude Code
+    # Hermes
+    _do_agent("hermes", build_hermes_frontmatter)
+
+    # Claude
+    def _claude_extra(parent):
         if refs:
-            claude_refs_dir = claude_path.parent / "references"
-            claude_refs_dir.mkdir(parents=True, exist_ok=True)
-            for ref in refs:
-                import shutil
-                shutil.copy2(ref, claude_refs_dir / ref.name)
-        print(f"  ✓ Claude: {claude_path} (+ {len(refs)} refs)")
+            d = parent / "references"; d.mkdir(parents=True, exist_ok=True)
+            import shutil
+            for r in refs: shutil.copy2(r, d / r.name)
+    _do_agent("claude", build_claude_frontmatter, _claude_extra)
 
-    # --- Codex ---
-    codex_path = AGENT_CONFIGS["codex"]["base"] / skill_name / "SKILL.md"
-    codex_body = build_codex_frontmatter(skill_name, meta, source_hash) + "\n\n" + inline_references(body, skill_name)
-    if dry_run:
-        print(f"  → Codex: {codex_path}")
-    else:
-        codex_path.parent.mkdir(parents=True, exist_ok=True)
-        codex_path.write_text(codex_body)
-        print(f"  ✓ Codex: {codex_path}")
+    # Codex
+    _do_agent("codex", build_codex_frontmatter)
 
-    # --- OpenClaw ---
-    openclaw_path = AGENT_CONFIGS["openclaw"]["base"] / skill_name / "SKILL.md"
-    openclaw_body = build_openclaw_frontmatter(skill_name, meta, source_hash) + "\n\n" + body
-    if dry_run:
-        print(f"  → OpenClaw: {openclaw_path}")
-    else:
-        openclaw_path.parent.mkdir(parents=True, exist_ok=True)
-        openclaw_path.write_text(openclaw_body)
-        # OpenClaw gets full references/ and scripts/ as separate files
+    # OpenClaw
+    def _oc_extra(parent):
         if refs:
             import shutil
-            oc_refs_dir = openclaw_path.parent / "references"
-            oc_refs_dir.mkdir(parents=True, exist_ok=True)
-            for ref in refs:
-                shutil.copy2(ref, oc_refs_dir / ref.name)
+            d = parent / "references"; d.mkdir(parents=True, exist_ok=True)
+            for r in refs: shutil.copy2(r, d / r.name)
         if scripts:
             import shutil
-            oc_scripts_dir = openclaw_path.parent / "scripts"
-            oc_scripts_dir.mkdir(parents=True, exist_ok=True)
-            for script in scripts:
-                shutil.copy2(script, oc_scripts_dir / script.name)
-        print(f"  ✓ OpenClaw: {openclaw_path} (+ {len(refs)} refs, + {len(scripts)} scripts)")
-
+            d = parent / "scripts"; d.mkdir(parents=True, exist_ok=True)
+            for s in scripts: shutil.copy2(s, d / s.name)
+    _do_agent("openclaw", build_openclaw_frontmatter, _oc_extra)
 
 def get_agent_skill_path(agent: str, skill_name: str, meta: dict) -> Path | None:
     """Return the Path to an agent's copy of a skill, or None if the agent
@@ -345,14 +398,13 @@ def check_skills(verbose: bool = False, targets: list[str] | None = None):
     manifest = load_manifest()
 
     # Agent display order
-    agent_names = list(AGENT_CONFIGS.keys())
-
     for skill_name, meta in manifest.items():
+        sync_targets = get_sync_targets(skill_name)
         if targets and skill_name not in targets:
             continue
         current_hash = compute_source_hash(skill_name)
         print(f"{skill_name}:")
-        for agent in agent_names:
+        for agent in sync_targets:
             path = get_agent_skill_path(agent, skill_name, meta)
             if path is None:
                 continue
@@ -380,6 +432,17 @@ def check_skills(verbose: bool = False, targets: list[str] | None = None):
 def main():
     dry_run = "--dry-run" in sys.argv
     check_mode = "--check" in sys.argv
+    show_log_mode = any(a.startswith("--show-log") for a in sys.argv)
+    show_log_n = 20
+    if show_log_mode:
+        for i, a in enumerate(sys.argv[1:], start=1):
+            if a.startswith("--show-log="):
+                try: show_log_n = int(a.split("=", 1)[1])
+                except: pass
+            elif a == "--show-log" and i < len(sys.argv) - 1:
+                # Space form: --show-log N
+                try: show_log_n = int(sys.argv[i + 1])
+                except: pass
     verbose = "--verbose" in sys.argv
 
     # Target specific skill(s) or all
@@ -394,6 +457,10 @@ def main():
             print(f"  ✗ {err}")
         sys.exit(1)
 
+    if show_log_mode:
+        show_log(show_log_n)
+        return
+
     if positional_args:
         targets = [a for a in positional_args if a in manifest]
         if not targets:
@@ -406,13 +473,15 @@ def main():
         check_skills(verbose=verbose, targets=targets)
         return
 
+
     print(f"Sync source: {SHARED}")
     print(f"Targets: {', '.join(targets)}")
     if dry_run:
         print("Mode: DRY RUN (no files written)")
 
     for name in targets:
-        sync_skill(name, manifest[name], dry_run=dry_run)
+        meta = load_skill_meta(name)
+        sync_skill(name, meta, dry_run=dry_run)
 
     print(f"\nDone. Synced {len(targets)} skill(s).")
 

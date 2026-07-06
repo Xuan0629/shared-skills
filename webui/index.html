@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en" data-lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shared Skills — Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ── Header ──────────────────────────────────────────────── -->
+<header class="header">
+  <div class="header-inner">
+    <h1><span class="icon">◈</span> <span data-i18n="title">Shared Skills Dashboard</span></h1>
+    <button class="lang-toggle" id="langToggle" aria-label="Switch language">中文</button>
+  </div>
+</header>
+
+<div class="container">
+
+<!-- ── Summary Bar ─────────────────────────────────────────── -->
+<div class="summary-bar" id="summaryBar"></div>
+
+<!-- ── Agent Cards ─────────────────────────────────────────── -->
+<h2 class="section-title" data-i18n="agents">Agents</h2>
+<div class="agent-cards" id="agentCards"></div>
+
+<!-- ── Skill Table ─────────────────────────────────────────── -->
+<h2 class="section-title" data-i18n="skills">Skills</h2>
+
+<div class="controls">
+  <input type="search" class="search-input" id="searchInput"
+         data-i18n-placeholder="searchPlaceholder"
+         placeholder="Search skills...">
+  <select class="filter-select" id="statusFilter">
+    <option value="all" data-i18n="filterAll">All statuses</option>
+    <option value="synced" data-i18n="filterSynced">Synced</option>
+    <option value="outdated" data-i18n="filterOutdated">Outdated</option>
+    <option value="missing" data-i18n="filterMissing">Missing</option>
+    <option value="disabled" data-i18n="filterDisabled">Disabled</option>
+  </select>
+  <select class="filter-select" id="agentFilter">
+    <option value="all" data-i18n="filterAllAgents">All agents</option>
+  </select>
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th data-i18n="colSkill">Skill</th>
+        <th data-i18n="colDescription">Description</th>
+        <th data-i18n="colAgents">Agents</th>
+        <th data-i18n="colStatus">Status</th>
+        <th data-i18n="colUpdated">Last Updated</th>
+      </tr>
+    </thead>
+    <tbody id="skillTableBody"></tbody>
+  </table>
+</div>
+
+<!-- ── Quick Actions ───────────────────────────────────────── -->
+<h2 class="section-title" data-i18n="quickActions">Quick Actions</h2>
+<div class="actions" id="quickActions"></div>
+
+<!-- ── Footer ──────────────────────────────────────────────── -->
+<footer class="footer">
+  <span>Generated: <span id="genTime">—</span></span>
+  <span style="margin-left:16px">Data: <code>webui/data.json</code></span>
+</footer>
+
+</div><!-- /container -->
+
+<script src="app.js"></script>
+</body>
+</html>

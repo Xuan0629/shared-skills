@@ -34,10 +34,69 @@ AGENT_CONFIGS = {
     },
 }
 
+VALID_AGENTS = {"hermes", "claude", "codex", "openclaw"}
+
 
 def load_manifest():
     with open(MANIFEST) as f:
         return yaml.safe_load(f)
+
+
+def validate_manifest(manifest: dict) -> list[str]:
+    """Validate the skills manifest. Returns a list of error messages (empty = valid).
+
+    Checks:
+    - Every skill name has a corresponding directory with SKILL.md
+    - Every agent name is one of: hermes, claude, codex, openclaw
+    - Every skill has at least one trigger or description across its agents
+    """
+    errors = []
+
+    if not isinstance(manifest, dict):
+        return ["manifest root must be a dict mapping skill names to agent configs"]
+
+    for skill_name, agents in manifest.items():
+        skill_dir = SHARED / skill_name
+        skill_md = skill_dir / "SKILL.md"
+
+        # Check the skill directory and SKILL.md exist
+        if not skill_dir.is_dir():
+            errors.append(f"{skill_name}: skill directory not found: {skill_dir}")
+            continue
+        if not skill_md.is_file():
+            errors.append(f"{skill_name}: SKILL.md not found: {skill_md}")
+            continue
+
+        # Check the entry is a dict
+        if not isinstance(agents, dict):
+            errors.append(
+                f"{skill_name}: entry must be a dict mapping agent names to configs, "
+                f"got {type(agents).__name__}"
+            )
+            continue
+
+        # Check every agent name is valid
+        for agent_name in agents:
+            if agent_name not in VALID_AGENTS:
+                errors.append(
+                    f"{skill_name}: unknown agent '{agent_name}' "
+                    f"(valid: {', '.join(sorted(VALID_AGENTS))})"
+                )
+
+        # Check at least one trigger or description exists
+        has_content = False
+        for agent_name in agents:
+            cfg = agents[agent_name]
+            if isinstance(cfg, dict):
+                if cfg.get("triggers") or cfg.get("description"):
+                    has_content = True
+                    break
+        if not has_content:
+            errors.append(
+                f"{skill_name}: no triggers or description defined for any agent"
+            )
+
+    return errors
 
 
 def read_body(skill_name: str) -> str:
@@ -326,6 +385,14 @@ def main():
     # Target specific skill(s) or all
     positional_args = [a for a in sys.argv[1:] if not a.startswith("--")]
     manifest = load_manifest()
+
+    # Validate manifest before any operation
+    errors = validate_manifest(manifest)
+    if errors:
+        print("Manifest validation failed:")
+        for err in errors:
+            print(f"  ✗ {err}")
+        sys.exit(1)
 
     if positional_args:
         targets = [a for a in positional_args if a in manifest]

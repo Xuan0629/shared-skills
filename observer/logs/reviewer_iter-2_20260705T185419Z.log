@@ -1,0 +1,1939 @@
+=== COMMAND ===
+codex exec --dangerously-bypass-approvals-and-sandbox Review Iteration 2: 1. Run tests: python3 sync-skills.py --check 2>&1 | head -5 2. Write review to /home/sean/shared-skills/reviews/iter-2.md 3. Use YAML frontmatter: verdict, summary, findings, metrics 4. Do NOT modify src/
+
+# Reviewer
+Review developer output. Run test command. Write to reviews/iter-N.md:
+```yaml
+---
+verdict: PASS
+summary: "one-line"
+findings:
+  - severity: blocker|major|minor
+    category: correctness|security|completeness
+    summary: "brief"
+```
+
+
+## Phase Status
+mode: code-dev, phase: dev, iteration: 2/3, prev_verdict: REQUEST_CHANGES, budget_remaining: 470473 tokens
+
+## Git Diff
+diff --git a/observer/logs/developer_iter-1_20260705T184848Z.log b/observer/logs/developer_iter-1_20260705T184848Z.log
+new file mode 100644
+index 0000000..82c4bb2
+--- /dev/null
++++ b/observer/logs/developer_iter-1_20260705T184848Z.log
+@@ -0,0 +1,302 @@
++=== COMMAND ===
++claude -p --dangerously-skip-permissions Iteration 1 — Developer Operational Constraints:
++- Read prd/PRD.md and prd/tech-design.md for requirements context
++- Run tests after changes: python3 sync-skills.py --check 2>&1 | head -5
++- Commit with: git add -A && git commit -m '<descriptive message>'
++- Follow the Developer Instructions below for your specific task
++
++# P2: Source Hash + --check Mode
++
++## Goal
++Track skill versions and detect when agent copies are outdated.
++
++## Implementation
++1. In sync-skills.py, before writing a skill to an agent directory:
++   - Compute SHA256 of (SKILL.md + meta.yaml)
++   - Write `source_hash: <sha256>` into the generated frontmatter
++2. Add `--check` CLI argument:
++   - Scan each agent's skill directory
++   - Compare stored source_hash against current shared source
++   - Report: "UP-TO-DATE", "OUTDATED", or "MISSING" for each skill-agent pair
++3. Add `--verbose` flag to show hash values
++
++Example output:
++```
++planning-with-files:
++  hermes: OUTDATED (abc123 vs def456)
++  claude: UP-TO-DATE
++  codex: MISSING
++```
++
++Run test and commit.
++
++## Phase Status
++mode: code-dev, phase: dev, iteration: 1/3, prev_verdict: N/A, budget_remaining: 477404 tokens
++
++## Git Diff
++diff --git a/codebase-design/meta.yaml b/codebase-design/meta.yaml
++new file mode 100644
++index 0000000..856c849
++--- /dev/null
+++++ b/codebase-design/meta.yaml
++@@ -0,0 +1,12 @@
+++hermes:
+++  category: software-development
+++  triggers:
+++    - "codebase design"
+++    - "架构评估"
+++    - "设计质量"
+++    - "模块边界"
+++    - "understand the architecture"
+++claude:
+++  description: "Analyze codebase architecture: module boundaries, dependency direction, abstraction levels, SOLID principles. Score each dimension with file-path evidence."
+++codex:
+++  description: "Analyze codebase architecture: modules, dependencies, abstractions."
++diff --git a/design-system/meta.yaml b/design-system/meta.yaml
++new file mode 100644
++index 0000000..2dc8efa
++--- /dev/null
+++++ b/design-system/meta.yaml
++@@ -0,0 +1,19 @@
+++hermes:
+++  category: creative
+++  triggers:
+++    - "design system"
+++    - "DESIGN.md"
+++    - "UI design"
+++    - "设计系统"
+++    - "设计规范"
+++    - "visual identity"
+++    - "frontend style"
+++    - "CSS tokens"
+++    - "UI tokens"
+++    - "生成前端"
+++    - "build UI"
+++    - "design tokens"
+++claude:
+++  description: "Global design system specification for all agent-generated UIs. Provides machine-readable design tokens and human-readable rules for HTML/CSS/JS generation."
+++codex:
+++  description: "Global design system specification for agent-generated UIs. Provides design tokens (HSL colors, typography, spacing) and rules for frontend generation."
++diff --git a/diagnosing-bugs/meta.yaml b/diagnosing-bugs/meta.yaml
++new file mode 100644
++index 0000000..6f66d88
++--- /dev/null
+++++ b/diagnosing-bugs/meta.yaml
++@@ -0,0 +1,14 @@
+++hermes:
+++  category: software-development
+++  triggers:
+++    - "diagnosing bugs"
+++    - "diagnose"
+++    - "bug 诊断"
+++    - "排查"
+++    - "根因分析"
+++    - "root cause"
+++    - "debugging systematically"
+++claude:
+++  description: "Systematic bug diagnosis: reproduce first, read full error trace, change one variable at a time, find root cause. Anti-patterns: shotgun debugging, workaround over root cause."
+++codex:
+++  description: "Systematic bug diagnosis: reproduce, read error, one variable at a time, find root cause."
++diff --git a/domain-modeling/meta.yaml b/domain-modeling/meta.yaml
++new file mode 100644
++index 0000000..d3d41e2
++--- /dev/null
+++++ b/domain-modeling/meta.yaml
++@@ -0,0 +1,14 @@
+++hermes:
+++  category: software-development
+++  triggers:
+++    - "domain model"
+++    - "领域模型"
+++    - "bounded context"
+++    - "聚合根"
+++    - "domain driven"
+++    - "业务术语"
+++    - "model the domain"
+++claude:
+++  description: "Extract domain model from codebase: core entities, aggregate roots, value objects, domain events, bounded contexts. Produces a business model independent of tech implementation."
+++codex:
+++  description: "Extract domain model from codebase: entities, value objects, bounded contexts."
++diff --git a/grill-design/meta.yaml b/grill-design/meta.yaml
++new file mode 100644
++index 0000000..8202016
++--- /dev/null
+++++ b/grill-design/meta.yaml
++@@ -0,0 +1,13 @@
+++hermes:
+++  category: software-development
+++  triggers:
+++    - "grill"
+++    - "grill me"
+++    - "审查这个设计"
+++    - "帮我打磨方案"
+++    - "这个方案有什么漏洞"
+++    - "检查设计"
+++claude:
+++  description: "Deep design review: ask one question at a time along the design tree, provide recommended answers, document all decisions. End when all branches are resolved."
+++codex:
+++  description: "Deep design review: one question at a time, document decisions."
++diff --git a/handoff/meta.yaml b/handoff/meta.yaml
++new file mode 100644
++index 0000000..08e77fc
++--- /dev/null
+++++ b/handoff/meta.yaml
++@@ -0,0 +1,13 @@
+++hermes:
+++  category: devops
+++  triggers:
+++    - "handoff"
+++    - "交接"
+++    - "hand over"
+++    - "转交"
+++    - "给下一个 agent"
+++    - "把上下文给"
+++claude:
+++  description: "Compress current conversation into a handoff document for another agent to continue. Answers: what was done, current status, next steps. Saves to ~/repos/_handoffs/."
+++codex:
+++  description: "Compress current conversation into a handoff document for another agent."
++diff --git a/observer/logs/developer_iter-2_20260705T182326Z.log b/observer/logs/developer_iter-2_20260705T182326Z.log
++new file mode 100644
++index 0000000..31a5c4d
++--- /dev/null
+++++ b/observer/logs/developer_iter-2_20260705T182326Z.log
++@@ -0,0 +1,270 @@
+++=== COMMAND ===
+++claude -p --dangerously-skip-permissions Iteration 2 — Developer Operational Constraints:
+++- Read prd/PRD.md and prd/tech-design.md for requirements context
+++- Run tests after changes: python3 sync-skills.py --check 2>&1 | head -5
+++- Commit with: git add -A && git commit -m '<descriptive message>'
+++- Follow the Developer Instructions below for your specific task
+++
+++# P2: Source Hash + --check Mode
+++
+++## Goal
+++Track skill versions and detect when agent copies are outdated.
+++
+++## Implementation
+++1. In sync-skills.py, before writing a skill to an agent directory:
+++   - Compute SHA256 of (SKILL.md + meta.yaml)
+++   - Write `source_hash: <sha256>` into the generated frontmatter
+++2. Add `--check` CLI argument:
+++   - Scan each agent's skill directory
+++   - Compare stored source_hash against current shared source
+++   - Report: "UP-TO-DATE", "OUTDATED", or "MISSING" for each skill-agent pair
+++3. Add `--verbose` flag to show hash values
+++
+++Example output:
+++```
+++planning-with-files:
+++  hermes: OUTDATED (abc123 vs def456)
+++  claude: UP-TO-DATE
+++  codex: MISSING
+++```
+++
+++Run test and commit.
+++
+++## Phase Status
+++mode: code-dev, phase: dev, iteration: 2/3, prev_verdict: REQUEST_CHANGES, budget_remaining: 482316 tokens
+++
+++## Last Review Findings
+++[INFO] severity: blocker
+++[INFO] .unison/pipelines/p0.yaml:8
+++[INFO] .unison/pipelines/p1.yaml:8
+++
+++## Git Diff
+++diff --git a/observer/logs/developer_iter-1_20260705T181932Z.log b/observer/logs/developer_iter-1_20260705T181932Z.log
+++new file mode 100644
+++index 0000000..b3f76af
+++--- /dev/null
++++++ b/observer/logs/developer_iter-1_20260705T181932Z.log
+++@@ -0,0 +1,249 @@
++++=== COMMAND ===
++++claude -p --dangerously-skip-permissions Iteration 1 — Developer Operational Constraints:
++++- Read prd/PRD.md and prd/tech-design.md for requirements context
++++- Run tests after changes: python3 sync-skills.py --check 2>&1 | head -5
++++- Commit with: git add -A && git commit -m '<descriptive message>'
++++- Follow the Developer Instructions below for your specific task
++++
++++# P2: Source Hash + --check Mode
++++
++++## Goal
++++Track skill versions and detect when agent copies are outdated.
++++
++++## Implementation
++++1. In sync-skills.py, before writing a skill to an agent directory:
++++   - Compute SHA256 of (SKILL.md + meta.yaml)
++++   - Write 
+...[diff truncated]
+
+## Cumulative Changes (since loop start)
+ .../logs/developer_iter-1_20260705T184848Z.log     |  302 +++
+ .../logs/developer_iter-2_20260705T185222Z.log     |  281 +++
+ observer/logs/reviewer_iter-1_20260705T185012Z.log | 2276 ++++++++++++++++++++
+ observer/logs/reviewer_iter-2_20260705T182725Z.log | 1660 ++++++++++++++
+ reviews/archive/2026-07-06/iter-1.md               |   23 +
+ reviews/archive/2026-07-06/iter-2.md               |   30 +
+ reviews/archive/2026-07-06/iter-3.md               |   26 +
+ 7 files changed, 4598 insertions(+)
+
+
+=== OUTPUT ===
+Reading additional input from stdin...
+OpenAI Codex v0.142.5
+--------
+workdir: /home/sean/shared-skills
+model: gpt-5.5
+provider: openai-custom
+approval: never
+sandbox: danger-full-access
+reasoning effort: high
+reasoning summaries: none
+session id: 019f33a1-a50f-7902-a97c-802f0d2a873b
+--------
+user
+Review Iteration 2: 1. Run tests: python3 sync-skills.py --check 2>&1 | head -5 2. Write review to /home/sean/shared-skills/reviews/iter-2.md 3. Use YAML frontmatter: verdict, summary, findings, metrics 4. Do NOT modify src/
+
+# Reviewer
+Review developer output. Run test command. Write to reviews/iter-N.md:
+```yaml
+---
+verdict: PASS
+summary: "one-line"
+findings:
+  - severity: blocker|major|minor
+    category: correctness|security|completeness
+    summary: "brief"
+```
+
+
+## Phase Status
+mode: code-dev, phase: dev, iteration: 2/3, prev_verdict: REQUEST_CHANGES, budget_remaining: 470473 tokens
+
+## Git Diff
+diff --git a/observer/logs/developer_iter-1_20260705T184848Z.log b/observer/logs/developer_iter-1_20260705T184848Z.log
+new file mode 100644
+index 0000000..82c4bb2
+--- /dev/null
++++ b/observer/logs/developer_iter-1_20260705T184848Z.log
+@@ -0,0 +1,302 @@
++=== COMMAND ===
++claude -p --dangerously-skip-permissions Iteration 1 — Developer Operational Constraints:
++- Read prd/PRD.md and prd/tech-design.md for requirements context
++- Run tests after changes: python3 sync-skills.py --check 2>&1 | head -5
++- Commit with: git add -A && git commit -m '<descriptive message>'
++- Follow the Developer Instructions below for your specific task
++
++# P2: Source Hash + --check Mode
++
++## Goal
++Track skill versions and detect when agent copies are outdated.
++
++## Implementation
++1. In sync-skills.py, before writing a skill to an agent directory:
++   - Compute SHA256 of (SKILL.md + meta.yaml)
++   - Write `source_hash: <sha256>` into the generated frontmatter
++2. Add `--check` CLI argument:
++   - Scan each agent's skill directory
++   - Compare stored source_hash against current shared source
++   - Report: "UP-TO-DATE", "OUTDATED", or "MISSING" for each skill-agent pair
++3. Add `--verbose` flag to show hash values
++
++Example output:
++```
++planning-with-files:
++  hermes: OUTDATED (abc123 vs def456)
++  claude: UP-TO-DATE
++  codex: MISSING
++```
++
++Run test and commit.
++
++## Phase Status
++mode: code-dev, phase: dev, iteration: 1/3, prev_verdict: N/A, budget_remaining: 477404 tokens
++
++## Git Diff
++diff --git a/codebase-design/meta.yaml b/codebase-design/meta.yaml
++new file mode 100644
++index 0000000..856c849
++--- /dev/null
+++++ b/codebase-design/meta.yaml
++@@ -0,0 +1,12 @@
+++hermes:
+++  category: software-development
+++  triggers:
+++    - "codebase design"
+++    - "架构评估"
+++    - "设计质量"
+++    - "模块边界"
+++    - "understand the architecture"
+++claude:
+++  description: "Analyze codebase architecture: module boundaries, dependency direction, abstraction levels, SOLID principles. Score each dimension with file-path evidence."
+++codex:
+++  description: "Analyze codebase architecture: modules, dependencies, abstractions."
++diff --git a/design-system/meta.yaml b/design-system/meta.yaml
++new file mode 100644
++index 0000000..2dc8efa
++--- /dev/null
+++++ b/design-system/meta.yaml
++@@ -0,0 +1,19 @@
+++hermes:
+++  category: creative
+++  triggers:
+++    - "design system"
+++    - "DESIGN.md"
+++    - "UI design"
+++    - "设计系统"
+++    - "设计规范"
+++    - "visual identity"
+++    - "frontend style"
+++    - "CSS tokens"
+++    - "UI tokens"
+++    - "生成前端"
+++    - "build UI"
+++    - "design tokens"
+++claude:
+++  description: "Global design system specification for all agent-generated UIs. Provides machine-readable design tokens and human-readable rules for HTML/CSS/JS generation."
+++codex:
+++  description: "Global design system specification for agent-generated UIs. Provides design tokens (HSL colors, typography, spacing) and rules for frontend generation."
++diff --git a/diagnosing-bugs/meta.yaml b/diagnosing-bugs/meta.yaml
++new file mode 100644
++index 0000000..6f66d88
++--- /dev/null
+++++ b/diagnosing-bugs/meta.yaml
++@@ -0,0 +1,14 @@
+++hermes:
+++  category: software-development
+++  triggers:
+++    - "diagnosing bugs"
+++    - "diagnose"
+++    - "bug 诊断"
+++    - "排查"
+++    - "根因分析"
+++    - "root cause"
+++    - "debugging systematically"
+++claude:
+++  description: "Systematic bug diagnosis: reproduce first, read full error trace, change one variable at a time, find root cause. Anti-patterns: shotgun debugging, workaround over root cause."
+++codex:
+++  description: "Systematic bug diagnosis: reproduce, read error, one variable at a time, find root cause."
++diff --git a/domain-modeling/meta.yaml b/domain-modeling/meta.yaml
++new file mode 100644
++index 0000000..d3d41e2
++--- /dev/null
+++++ b/domain-modeling/meta.yaml
++@@ -0,0 +1,14 @@
+++hermes:
+++  category: software-development
+++  triggers:
+++    - "domain model"
+++    - "领域模型"
+++    - "bounded context"
+++    - "聚合根"
+++    - "domain driven"
+++    - "业务术语"
+++    - "model the domain"
+++claude:
+++  description: "Extract domain model from codebase: core entities, aggregate roots, value objects, domain events, bounded contexts. Produces a business model independent of tech implementation."
+++codex:
+++  description: "Extract domain model from codebase: entities, value objects, bounded contexts."
++diff --git a/grill-design/meta.yaml b/grill-design/meta.yaml
++new file mode 100644
++index 0000000..8202016
++--- /dev/null
+++++ b/grill-design/meta.yaml
++@@ -0,0 +1,13 @@
+++hermes:
+++  category: software-development
+++  triggers:
+++    - "grill"
+++    - "grill me"
+++    - "审查这个设计"
+++    - "帮我打磨方案"
+++    - "这个方案有什么漏洞"
+++    - "检查设计"
+++claude:
+++  description: "Deep design review: ask one question at a time along the design tree, provide recommended answers, document all decisions. End when all branches are resolved."
+++codex:
+++  description: "Deep design review: one question at a time, document decisions."
++diff --git a/handoff/meta.yaml b/handoff/meta.yaml
++new file mode 100644
++index 0000000..08e77fc
++--- /dev/null
+++++ b/handoff/meta.yaml
++@@ -0,0 +1,13 @@
+++hermes:
+++  category: devops
+++  triggers:
+++    - "handoff"
+++    - "交接"
+++    - "hand over"
+++    - "转交"
+++    - "给下一个 agent"
+++    - "把上下文给"
+++claude:
+++  description: "Compress current conversation into a handoff document for another agent to continue. Answers: what was done, current status, next steps. Saves to ~/repos/_handoffs/."
+++codex:
+++  description: "Compress current conversation into a handoff document for another agent."
++diff --git a/observer/logs/developer_iter-2_20260705T182326Z.log b/observer/logs/developer_iter-2_20260705T182326Z.log
++new file mode 100644
++index 0000000..31a5c4d
++--- /dev/null
+++++ b/observer/logs/developer_iter-2_20260705T182326Z.log
++@@ -0,0 +1,270 @@
+++=== COMMAND ===
+++claude -p --dangerously-skip-permissions Iteration 2 — Developer Operational Constraints:
+++- Read prd/PRD.md and prd/tech-design.md for requirements context
+++- Run tests after changes: python3 sync-skills.py --check 2>&1 | head -5
+++- Commit with: git add -A && git commit -m '<descriptive message>'
+++- Follow the Developer Instructions below for your specific task
+++
+++# P2: Source Hash + --check Mode
+++
+++## Goal
+++Track skill versions and detect when agent copies are outdated.
+++
+++## Implementation
+++1. In sync-skills.py, before writing a skill to an agent directory:
+++   - Compute SHA256 of (SKILL.md + meta.yaml)
+++   - Write `source_hash: <sha256>` into the generated frontmatter
+++2. Add `--check` CLI argument:
+++   - Scan each agent's skill directory
+++   - Compare stored source_hash against current shared source
+++   - Report: "UP-TO-DATE", "OUTDATED", or "MISSING" for each skill-agent pair
+++3. Add `--verbose` flag to show hash values
+++
+++Example output:
+++```
+++planning-with-files:
+++  hermes: OUTDATED (abc123 vs def456)
+++  claude: UP-TO-DATE
+++  codex: MISSING
+++```
+++
+++Run test and commit.
+++
+++## Phase Status
+++mode: code-dev, phase: dev, iteration: 2/3, prev_verdict: REQUEST_CHANGES, budget_remaining: 482316 tokens
+++
+++## Last Review Findings
+++[INFO] severity: blocker
+++[INFO] .unison/pipelines/p0.yaml:8
+++[INFO] .unison/pipelines/p1.yaml:8
+++
+++## Git Diff
+++diff --git a/observer/logs/developer_iter-1_20260705T181932Z.log b/observer/logs/developer_iter-1_20260705T181932Z.log
+++new file mode 100644
+++index 0000000..b3f76af
+++--- /dev/null
++++++ b/observer/logs/developer_iter-1_20260705T181932Z.log
+++@@ -0,0 +1,249 @@
++++=== COMMAND ===
++++claude -p --dangerously-skip-permissions Iteration 1 — Developer Operational Constraints:
++++- Read prd/PRD.md and prd/tech-design.md for requirements context
++++- Run tests after changes: python3 sync-skills.py --check 2>&1 | head -5
++++- Commit with: git add -A && git commit -m '<descriptive message>'
++++- Follow the Developer Instructions below for your specific task
++++
++++# P2: Source Hash + --check Mode
++++
++++## Goal
++++Track skill versions and detect when agent copies are outdated.
++++
++++## Implementation
++++1. In sync-skills.py, before writing a skill to an agent directory:
++++   - Compute SHA256 of (SKILL.md + meta.yaml)
++++   - Write 
+...[diff truncated]
+
+## Cumulative Changes (since loop start)
+ .../logs/developer_iter-1_20260705T184848Z.log     |  302 +++
+ .../logs/developer_iter-2_20260705T185222Z.log     |  281 +++
+ observer/logs/reviewer_iter-1_20260705T185012Z.log | 2276 ++++++++++++++++++++
+ observer/logs/reviewer_iter-2_20260705T182725Z.log | 1660 ++++++++++++++
+ reviews/archive/2026-07-06/iter-1.md               |   23 +
+ reviews/archive/2026-07-06/iter-2.md               |   30 +
+ reviews/archive/2026-07-06/iter-3.md               |   26 +
+ 7 files changed, 4598 insertions(+)
+
+codex
+I’ll run the requested check first, then inspect the current diff enough to verify whether the P2 requirements are actually implemented before writing the review file.
+exec
+/bin/bash -lc 'python3 sync-skills.py --check 2>&1 | head -5' in /home/sean/shared-skills
+ succeeded in 0ms:
+planning-with-files:
+  hermes: UP-TO-DATE
+  claude: UP-TO-DATE
+  codex: UP-TO-DATE
+  openclaw: UP-TO-DATE
+
+codex
+The check command exits cleanly and reports the first skill as up to date across the visible agents. I’m going to inspect the implementation and diff now, because a passing check alone doesn’t prove the hash/check behavior is correct.
+exec
+/bin/bash -lc 'git status --short' in /home/sean/shared-skills
+ succeeded in 0ms:
+ M .unison/budget.json
+ M observer/logs/developer_iter-2_20260705T185222Z.log
+?? observer/logs/reviewer_iter-2_20260705T185419Z.log
+
+exec
+/bin/bash -lc 'git diff -- sync-skills.py' in /home/sean/shared-skills
+ succeeded in 0ms:
+exec
+/bin/bash -lc "sed -n '1,260p' prd/tech-design.md" in /home/sean/shared-skills
+ exited 2 in 0ms:
+sed: can't read prd/tech-design.md: No such file or directory
+
+exec
+/bin/bash -lc "sed -n '1,260p' sync-skills.py" in /home/sean/shared-skills
+exec
+/bin/bash -lc "sed -n '1,220p' prd/PRD.md" in /home/sean/shared-skills
+ exited 2 in 0ms:
+sed: can't read prd/PRD.md: No such file or directory
+
+ succeeded in 0ms:
+#!/usr/bin/env python3
+"""sync-skills — 将 ~/shared-skills/ 同步到各 agent 的 skill 目录。
+
+单向同步：共享源 → agent。修改必须从共享源开始。
+用法: python3 sync-skills.sh [--dry-run] [skill-name]
+"""
+
+import hashlib
+import os
+import sys
+import yaml
+from pathlib import Path
+
+SHARED = Path.home() / "shared-skills"
+MANIFEST = SHARED / "skills-manifest.yaml"
+
+AGENT_CONFIGS = {
+    "hermes": {
+        "base": Path.home() / ".hermes" / "skills",
+        "frontmatter_fields": ["name", "description", "triggers"],
+    },
+    "claude": {
+        "base": Path.home() / ".claude" / "skills",
+        "frontmatter_fields": ["name", "description", "version", "allowed-tools"],
+        "extra": {"version": "0.1.0", "allowed-tools": ["Bash", "Read", "Glob", "Grep"]},
+    },
+    "codex": {
+        "base": Path.home() / ".codex" / "skills",
+        "frontmatter_fields": ["name", "description"],
+    },
+    "openclaw": {
+        "base": Path.home() / ".openclaw" / "agents" / "main" / "skills",
+        "frontmatter_fields": ["name", "description"],
+    },
+}
+
+
+def load_manifest():
+    with open(MANIFEST) as f:
+        return yaml.safe_load(f)
+
+
+def read_body(skill_name: str) -> str:
+    """读取共享 skill 的正文（去除空行首尾）。"""
+    path = SHARED / skill_name / "SKILL.md"
+    if not path.exists():
+        raise FileNotFoundError(f"Missing shared SKILL.md: {path}")
+    return path.read_text().strip()
+
+
+def list_references(skill_name: str) -> list[Path]:
+    """列出 references/ 下的文件。"""
+    ref_dir = SHARED / skill_name / "references"
+    if ref_dir.exists():
+        return sorted(ref_dir.glob("*.md"))
+    return []
+
+
+def list_scripts(skill_name: str) -> list[Path]:
+    """列出 scripts/ 下的文件。"""
+    scripts_dir = SHARED / skill_name / "scripts"
+    if scripts_dir.exists():
+        return sorted(scripts_dir.glob("*"))
+    return []
+
+
+def compute_source_hash(skill_name: str) -> str:
+    """Compute SHA256 hash of SKILL.md + meta.yaml (the per-skill metadata file).
+
+    This hash captures the full shared source for a skill — both its body
+    and its agent-specific metadata (triggers, categories, descriptions).
+    Any change to either file will produce a different hash, which --check
+    uses to detect outdated agent copies.
+    """
+    skill_path = SHARED / skill_name / "SKILL.md"
+    meta_path = SHARED / skill_name / "meta.yaml"
+    skill_bytes = skill_path.read_bytes()
+    meta_bytes = meta_path.read_bytes()
+    combined = skill_bytes + b"\n---META---\n" + meta_bytes
+    return hashlib.sha256(combined).hexdigest()
+
+
+def parse_frontmatter(filepath: Path) -> dict | None:
+    """Parse YAML frontmatter from a SKILL.md file.
+
+    Returns the parsed dict on success, None if the file is missing,
+    has no frontmatter, or the YAML is invalid.
+    """
+    if not filepath.exists():
+        return None
+    content = filepath.read_text()
+    if not content.startswith("---"):
+        return None
+    end = content.find("---", 3)
+    if end == -1:
+        return None
+    fm_text = content[3:end].strip()
+    if not fm_text:
+        return None
+    try:
+        parsed = yaml.safe_load(fm_text)
+        return parsed if isinstance(parsed, dict) else None
+    except yaml.YAMLError:
+        return None
+
+
+def _yaml_safe(value: str) -> str:
+    """Quote a string value for safe inclusion in YAML frontmatter.
+
+    Strings containing YAML-significant characters (colons, hashes, etc.)
+    are double-quoted to prevent parser errors.
+    """
+    if any(c in value for c in ':#{}[]>,|*&!%@`\''):
+        # Escape backslashes and double quotes within the string
+        escaped = value.replace('\\', '\\\\').replace('"', '\\"')
+        return f'"{escaped}"'
+    return value
+
+
+def build_hermes_frontmatter(skill_name: str, meta: dict, source_hash: str = "") -> str:
+    """生成 Hermes 格式的 YAML frontmatter（含 triggers）。"""
+    triggers = meta.get("hermes", {}).get("triggers", [])
+    description = meta.get("claude", {}).get("description", skill_name)
+    lines = ["---", f"name: {skill_name}", f"description: {_yaml_safe(description)}"]
+    if triggers:
+        lines.append("triggers:")
+        for t in triggers:
+            # regex patterns with special chars need quoting
+            if any(c in t for c in ".*{}[]()"):
+                lines.append(f'  - "{t}"')
+            else:
+                lines.append(f"  - {t}")
+    if source_hash:
+        lines.append(f"source_hash: {source_hash}")
+    lines.append("---")
+    return "\n".join(lines)
+
+
+def build_claude_frontmatter(skill_name: str, meta: dict, source_hash: str = "") -> str:
+    """生成 Claude Code 格式的 YAML frontmatter。"""
+    description = meta.get("claude", {}).get("description", skill_name)
+    lines = [
+        "---",
+        f"name: {skill_name}",
+        f"description: {_yaml_safe(description)}",
+        "version: 0.1.0",
+        "allowed-tools:",
+        "  - Bash",
+        "  - Read",
+        "  - Glob",
+        "  - Grep",
+    ]
+    if source_hash:
+        lines.append(f"source_hash: {source_hash}")
+    lines.append("---")
+    return "\n".join(lines)
+
+
+def build_codex_frontmatter(skill_name: str, meta: dict, source_hash: str = "") -> str:
+    """生成 Codex 格式的 YAML frontmatter。"""
+    description = meta.get("codex", {}).get("description", skill_name)
+    lines = ["---", f"name: {skill_name}", f"description: {_yaml_safe(description)}"]
+    if source_hash:
+        lines.append(f"source_hash: {source_hash}")
+    lines.append("---")
+    return "\n".join(lines)
+
+
+def build_openclaw_frontmatter(skill_name: str, meta: dict, source_hash: str = "") -> str:
+    """生成 OpenClaw 格式的 YAML frontmatter。"""
+    description = meta.get("openclaw", {}).get("description", skill_name)
+    lines = ["---", f"name: {skill_name}", f"description: {_yaml_safe(description)}"]
+    if source_hash:
+        lines.append(f"source_hash: {source_hash}")
+    lines.append("---")
+    return "\n".join(lines)
+
+
+def inline_references(body: str, skill_name: str) -> str:
+    """将 references/ 内容内联到正文末尾。"""
+    refs = list_references(skill_name)
+    if not refs:
+        return body
+    parts = [body, "", "## References (inlined)"]
+    for ref in refs:
+        parts.append(f"\n### {ref.name}")
+        parts.append(ref.read_text().strip())
+    return "\n".join(parts)
+
+
+def sync_skill(skill_name: str, meta: dict, dry_run: bool = False):
+    """同步单个 skill 到所有 agent。"""
+    body = read_body(skill_name)
+    refs = list_references(skill_name)
+    scripts = list_scripts(skill_name)
+    source_hash = compute_source_hash(skill_name)
+
+    print(f"\n{'[DRY RUN] ' if dry_run else ''}Syncing: {skill_name}")
+
+    # --- Hermes ---
+    category = meta.get("hermes", {}).get("category", "shared")
+    hermes_path = AGENT_CONFIGS["hermes"]["base"] / category / skill_name / "SKILL.md"
+    hermes_body = build_hermes_frontmatter(skill_name, meta, source_hash) + "\n\n" + inline_references(body, skill_name)
+    if dry_run:
+        print(f"  → Hermes: {hermes_path}")
+    else:
+        hermes_path.parent.mkdir(parents=True, exist_ok=True)
+        hermes_path.write_text(hermes_body)
+        print(f"  ✓ Hermes: {hermes_path}")
+
+    # --- Claude Code ---
+    claude_path = AGENT_CONFIGS["claude"]["base"] / skill_name / "SKILL.md"
+    claude_body = build_claude_frontmatter(skill_name, meta, source_hash) + "\n\n" + body
+    # Claude Code keeps references/ as separate files
+    if dry_run:
+        print(f"  → Claude: {claude_path}")
+    else:
+        claude_path.parent.mkdir(parents=True, exist_ok=True)
+        claude_path.write_text(claude_body)
+        # Copy references as separate files for Claude Code
+        if refs:
+            claude_refs_dir = claude_path.parent / "references"
+            claude_refs_dir.mkdir(parents=True, exist_ok=True)
+            for ref in refs:
+                import shutil
+                shutil.copy2(ref, claude_refs_dir / ref.name)
+        print(f"  ✓ Claude: {claude_path} (+ {len(refs)} refs)")
+
+    # --- Codex ---
+    codex_path = AGENT_CONFIGS["codex"]["base"] / skill_name / "SKILL.md"
+    codex_body = build_codex_frontmatter(skill_name, meta, source_hash) + "\n\n" + inline_references(body, skill_name)
+    if dry_run:
+        print(f"  → Codex: {codex_path}")
+    else:
+        codex_path.parent.mkdir(parents=True, exist_ok=True)
+        codex_path.write_text(codex_body)
+        print(f"  ✓ Codex: {codex_path}")
+
+    # --- OpenClaw ---
+    openclaw_path = AGENT_CONFIGS["openclaw"]["base"] / skill_name / "SKILL.md"
+    openclaw_body = build_openclaw_frontmatter(skill_name, meta, source_hash) + "\n\n" + body
+    if dry_run:
+        print(f"  → OpenClaw: {openclaw_path}")
+    else:
+        openclaw_path.parent.mkdir(parents=True, exist_ok=True)
+        openclaw_path.write_text(openclaw_body)
+        # OpenClaw gets full references/ and scripts/ as separate files
+        if refs:
+            import shutil
+            oc_refs_dir = openclaw_path.parent / "references"
+            oc_refs_dir.mkdir(parents=True, exist_ok=True)
+            for ref in refs:
+                shutil.copy2(ref, oc_refs_dir / ref.name)
+        if scripts:
+            import shutil
+            oc_scripts_dir = openclaw_path.parent / "scripts"
+            oc_scripts_dir.mkdir(parents=True, exist_ok=True)
+            for script in scripts:
+                shutil.copy2(script, oc_scripts_dir / script.name)
+        print(f"  ✓ OpenClaw: {openclaw_path} (+ {len(refs)} refs, + {len(scripts)} scripts)")
+
+codex
+The current `sync-skills.py` has the hash/check code present, and there is no local diff in that file. The PRD paths named in the developer instructions are not present in this checkout, so I’m continuing from the actual implementation and repository state.
+exec
+/bin/bash -lc 'git show --stat --oneline --name-only HEAD' in /home/sean/shared-skills
+ succeeded in 0ms:
+1221715 P2: observer logs for iter-2 developer + reviewer runs, archive reviews dir
+observer/logs/developer_iter-1_20260705T184848Z.log
+observer/logs/developer_iter-2_20260705T185222Z.log
+observer/logs/reviewer_iter-1_20260705T185012Z.log
+observer/logs/reviewer_iter-2_20260705T182725Z.log
+reviews/archive/2026-07-06/iter-1.md
+reviews/archive/2026-07-06/iter-2.md
+reviews/archive/2026-07-06/iter-3.md
+
+exec
+/bin/bash -lc "sed -n '260,560p' sync-skills.py" in /home/sean/shared-skills
+exec
+/bin/bash -lc 'git log --oneline -5' in /home/sean/shared-skills
+ succeeded in 0ms:
+1221715 P2: observer logs for iter-2 developer + reviewer runs, archive reviews dir
+2bbf8d0 P2: source_hash uses per-skill meta.yaml, fix YAML quoting for descriptions with colons
+4ef3344 P2: source_hash tracking + --check mode, verify all 8 skills synced UP-TO-DATE
+c62c2a9 P2: source_hash tracking + --check mode, fix P0 openclaw description bug
+8f30a14 P2: source_hash tracking + --check mode, fix P0 openclaw description bug
+
+ succeeded in 0ms:
+        print(f"  ✓ OpenClaw: {openclaw_path} (+ {len(refs)} refs, + {len(scripts)} scripts)")
+
+
+def get_agent_skill_path(agent: str, skill_name: str, meta: dict) -> Path | None:
+    """Return the Path to an agent's copy of a skill, or None if the agent
+    has no config for this skill type."""
+    config = AGENT_CONFIGS.get(agent)
+    if not config:
+        return None
+    base = config["base"]
+    if agent == "hermes":
+        category = meta.get("hermes", {}).get("category", "shared")
+        return base / category / skill_name / "SKILL.md"
+    return base / skill_name / "SKILL.md"
+
+
+def check_skills(verbose: bool = False, targets: list[str] | None = None):
+    """Scan agent skill copies and compare stored source_hash against current source.
+
+    For each skill in the manifest and each configured agent, reports:
+    - UP-TO-DATE: stored hash matches current source
+    - OUTDATED: stored hash differs from current source (agent copy is stale)
+    - MISSING: no agent copy found, or no source_hash in its frontmatter
+
+    If targets is provided, only check skills whose names are in the list.
+    """
+    manifest = load_manifest()
+
+    # Agent display order
+    agent_names = list(AGENT_CONFIGS.keys())
+
+    for skill_name, meta in manifest.items():
+        if targets and skill_name not in targets:
+            continue
+        current_hash = compute_source_hash(skill_name)
+        print(f"{skill_name}:")
+        for agent in agent_names:
+            path = get_agent_skill_path(agent, skill_name, meta)
+            if path is None:
+                continue
+            fm = parse_frontmatter(path)
+            if fm is None:
+                print(f"  {agent}: MISSING")
+                continue
+            stored_hash = fm.get("source_hash")
+            if not stored_hash:
+                print(f"  {agent}: MISSING")
+            elif stored_hash == current_hash:
+                if verbose:
+                    print(f"  {agent}: UP-TO-DATE ({current_hash[:12]})")
+                else:
+                    print(f"  {agent}: UP-TO-DATE")
+            else:
+                short_current = current_hash[:12]
+                short_stored = stored_hash[:12] if len(stored_hash) >= 12 else stored_hash
+                if verbose:
+                    print(f"  {agent}: OUTDATED ({short_stored} vs {short_current})")
+                else:
+                    print(f"  {agent}: OUTDATED ({short_stored} vs {short_current})")
+
+
+def main():
+    dry_run = "--dry-run" in sys.argv
+    check_mode = "--check" in sys.argv
+    verbose = "--verbose" in sys.argv
+
+    # Target specific skill(s) or all
+    positional_args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    manifest = load_manifest()
+
+    if positional_args:
+        targets = [a for a in positional_args if a in manifest]
+        if not targets:
+            print(f"No skills found: {positional_args}")
+            sys.exit(1)
+    else:
+        targets = list(manifest.keys())
+
+    if check_mode:
+        check_skills(verbose=verbose, targets=targets)
+        return
+
+    print(f"Sync source: {SHARED}")
+    print(f"Targets: {', '.join(targets)}")
+    if dry_run:
+        print("Mode: DRY RUN (no files written)")
+
+    for name in targets:
+        sync_skill(name, manifest[name], dry_run=dry_run)
+
+    print(f"\nDone. Synced {len(targets)} skill(s).")
+
+
+if __name__ == "__main__":
+    main()
+
+exec
+/bin/bash -lc 'ls reviews && find reviews -maxdepth 2 -type f | sort | tail -20' in /home/sean/shared-skills
+ succeeded in 0ms:
+acceptance-criteria.md
+archive
+iter-1.md
+iter-2.md
+iter-3.md
+reviews/acceptance-criteria.md
+reviews/iter-1.md
+reviews/iter-2.md
+reviews/iter-3.md
+
+exec
+/bin/bash -lc "rg --files -g 'PRD.md' -g 'tech-design.md' -g '*prd*'" in /home/sean/shared-skills
+ exited 1 in 0ms:
+codex
+I found prior commits for the P2 work and the latest HEAD appears to be log/review archival, not a code change. I’m checking the actual P2 commits and existing reviews so the iteration-2 verdict reflects the developer output rather than incidental observer files.
+exec
+/bin/bash -lc "sed -n '1,220p' reviews/iter-2.md" in /home/sean/shared-skills
+ succeeded in 0ms:
+---
+verdict: REQUEST_CHANGES
+summary: "--check runs, but source_hash is computed from manifest metadata instead of SKILL.md + meta.yaml as required."
+findings:
+  - severity: major
+    category: correctness
+    file: sync-skills.py
+    line: 67
+    summary: "compute_source_hash() hashes SKILL.md plus serialized manifest metadata, not the per-skill meta.yaml required by P2; changes to meta.yaml would not be reflected in source_hash."
+metrics:
+  test_command: "python3 sync-skills.py --check 2>&1 | head -5"
+  test_exit_code: 0
+  test_output_head:
+    - "planning-with-files:"
+    - "  hermes: UP-TO-DATE"
+    - "  claude: UP-TO-DATE"
+    - "  codex: UP-TO-DATE"
+    - "  openclaw: UP-TO-DATE"
+  full_check_counts:
+    UP-TO-DATE: 4
+    MISSING: 28
+    OUTDATED: 0
+---
+
+exec
+/bin/bash -lc 'git show --stat --oneline 2bbf8d0' in /home/sean/shared-skills
+ succeeded in 0ms:
+2bbf8d0 P2: source_hash uses per-skill meta.yaml, fix YAML quoting for descriptions with colons
+ codebase-design/meta.yaml                          |   12 +
+ design-system/meta.yaml                            |   19 +
+ diagnosing-bugs/meta.yaml                          |   14 +
+ domain-modeling/meta.yaml                          |   14 +
+ grill-design/meta.yaml                             |   13 +
+ handoff/meta.yaml                                  |   13 +
+ .../logs/developer_iter-2_20260705T182326Z.log     |  270 +++
+ observer/logs/reviewer_iter-1_20260705T182029Z.log | 2489 ++++++++++++++++++++
+ planning-with-files/meta.yaml                      |   14 +
+ role-play/meta.yaml                                |   15 +
+ sync-skills.py                                     |   36 +-
+ 11 files changed, 2898 insertions(+), 11 deletions(-)
+
+exec
+/bin/bash -lc "sed -n '1,200p' reviews/iter-1.md" in /home/sean/shared-skills
+ succeeded in 0ms:
+---
+verdict: REQUEST_CHANGES
+summary: "Requested check passes, but committed pipeline YAML files are unparsable."
+findings:
+  - severity: blocker
+    category: correctness
+    summary: ".unison/pipelines/p0.yaml, p1.yaml, and p3.yaml have unescaped nested double quotes in project.test_command, so PyYAML cannot parse those pipeline definitions."
+    evidence:
+      - ".unison/pipelines/p0.yaml:8"
+      - ".unison/pipelines/p1.yaml:8"
+      - ".unison/pipelines/p3.yaml:8"
+metrics:
+  test_command: "python3 sync-skills.py --check 2>&1 | head -5"
+  test_exit_code: 0
+  test_output:
+    - "planning-with-files:"
+    - "  hermes: UP-TO-DATE"
+    - "  claude: UP-TO-DATE"
+    - "  codex: UP-TO-DATE"
+    - "  openclaw: UP-TO-DATE"
+  additional_checks:
+    pipeline_yaml_parse: "3 failed, 1 passed"
+---
+
+exec
+/bin/bash -lc 'git show -- sync-skills.py' in /home/sean/shared-skills
+ succeeded in 0ms:
+exec
+/bin/bash -lc 'git show --stat --oneline 4ef3344' in /home/sean/shared-skills
+ succeeded in 0ms:
+4ef3344 P2: source_hash tracking + --check mode, verify all 8 skills synced UP-TO-DATE
+ .../logs/developer_iter-1_20260705T181932Z.log     |  249 ++++
+ observer/logs/reviewer_iter-3_20260705T181416Z.log | 1531 ++++++++++++++++++++
+ reviews/iter-3.md                                  |   26 +
+ 3 files changed, 1806 insertions(+)
+
+codex
+The previous iteration’s major issue was real: the hash used manifest metadata instead of each skill’s `meta.yaml`. The current implementation now reads `SKILL.md` and per-skill `meta.yaml`, so I’m validating the remaining behavior and counts before writing the verdict.
+exec
+/bin/bash -lc 'find . -maxdepth 2 -name meta.yaml | sort | wc -l && find . -maxdepth 2 -name SKILL.md | sort | wc -l' in /home/sean/shared-skills
+ succeeded in 0ms:
+8
+8
+
+exec
+/bin/bash -lc "python3 sync-skills.py --check | awk '/UP-TO-DATE/{u++} /OUTDATED/{o++} /MISSING/{m++} END{print \"UP-TO-DATE=\"u+0; print \"OUTDATED=\"o+0; print \"MISSING=\"m+0}'" in /home/sean/shared-skills
+ succeeded in 0ms:
+UP-TO-DATE=32
+OUTDATED=0
+MISSING=0
+
+exec
+/bin/bash -lc 'git show --stat --oneline HEAD~1..HEAD' in /home/sean/shared-skills
+ succeeded in 0ms:
+1221715 P2: observer logs for iter-2 developer + reviewer runs, archive reviews dir
+ .../logs/developer_iter-1_20260705T184848Z.log     |  302 +++
+ .../logs/developer_iter-2_20260705T185222Z.log     |  281 +++
+ observer/logs/reviewer_iter-1_20260705T185012Z.log | 2276 ++++++++++++++++++++
+ observer/logs/reviewer_iter-2_20260705T182725Z.log | 1660 ++++++++++++++
+ reviews/archive/2026-07-06/iter-1.md               |   23 +
+ reviews/archive/2026-07-06/iter-2.md               |   30 +
+ reviews/archive/2026-07-06/iter-3.md               |   26 +
+ 7 files changed, 4598 insertions(+)
+
+exec
+/bin/bash -lc 'python3 sync-skills.py --check --verbose planning-with-files | head -8' in /home/sean/shared-skills
+ succeeded in 0ms:
+planning-with-files:
+  hermes: UP-TO-DATE (2b52d0fd0acb)
+  claude: UP-TO-DATE (2b52d0fd0acb)
+  codex: UP-TO-DATE (2b52d0fd0acb)
+  openclaw: UP-TO-DATE (2b52d0fd0acb)
+
+exec
+/bin/bash -lc "sed -n '1,200p' skills-manifest.yaml" in /home/sean/shared-skills
+ succeeded in 0ms:
+# 共享 Skill 清单
+# 每个 skill 定义其在各 agent 中的元数据（触发条件、描述、分类）
+# 正文来自 ~/shared-skills/<name>/SKILL.md
+
+planning-with-files:
+  hermes:
+    category: productivity
+    triggers:
+      - "plan with files"
+      - "create a plan"
+      - "task plan"
+      - "制定计划"
+      - "分步计划"
+      - "multi step"
+      - "crash proof"
+  claude:
+    description: "Crash-proof persistent file-based planning. Creates task_plan.md, findings.md, and progress.md on disk so any agent can survive context loss, crashes, and /clear."
+  codex:
+    description: "Crash-proof persistent file-based planning. Creates task_plan.md, findings.md, and progress.md on disk."
+
+design-system:
+  hermes:
+    category: creative
+    triggers:
+      - "design system"
+      - "DESIGN.md"
+      - "UI design"
+      - "设计系统"
+      - "设计规范"
+      - "visual identity"
+      - "frontend style"
+      - "CSS tokens"
+      - "UI tokens"
+      - "生成前端"
+      - "build UI"
+      - "design tokens"
+  claude:
+    description: "Global design system specification for all agent-generated UIs. Provides machine-readable design tokens and human-readable rules for HTML/CSS/JS generation."
+  codex:
+    description: "Global design system specification for agent-generated UIs. Provides design tokens (HSL colors, typography, spacing) and rules for frontend generation."
+
+role-play:
+  hermes:
+    category: productivity
+    triggers:
+      - "role play"
+      - "扮演"
+      - "as a"
+      - "act as"
+      - "以.*身份"
+      - "假装你是"
+      - "你是.*角色"
+      - "switch role"
+  claude:
+    description: "Assign a specific professional role before a task. Supports 8 roles: CEO, Designer, Eng Manager, QA, Release Manager, Doc Engineer, Security Auditor, Performance Engineer."
+  codex:
+    description: "Assign a specific professional role before a task. Supports 8 predefined roles."
+
+handoff:
+  hermes:
+    category: devops
+    triggers:
+      - "handoff"
+      - "交接"
+      - "hand over"
+      - "转交"
+      - "给下一个 agent"
+      - "把上下文给"
+  claude:
+    description: "Compress current conversation into a handoff document for another agent to continue. Answers: what was done, current status, next steps. Saves to ~/repos/_handoffs/."
+  codex:
+    description: "Compress current conversation into a handoff document for another agent."
+
+codebase-design:
+  hermes:
+    category: software-development
+    triggers:
+      - "codebase design"
+      - "架构评估"
+      - "设计质量"
+      - "模块边界"
+      - "understand the architecture"
+  claude:
+    description: "Analyze codebase architecture: module boundaries, dependency direction, abstraction levels, SOLID principles. Score each dimension with file-path evidence."
+  codex:
+    description: "Analyze codebase architecture: modules, dependencies, abstractions."
+
+domain-modeling:
+  hermes:
+    category: software-development
+    triggers:
+      - "domain model"
+      - "领域模型"
+      - "bounded context"
+      - "聚合根"
+      - "domain driven"
+      - "业务术语"
+      - "model the domain"
+  claude:
+    description: "Extract domain model from codebase: core entities, aggregate roots, value objects, domain events, bounded contexts. Produces a business model independent of tech implementation."
+  codex:
+    description: "Extract domain model from codebase: entities, value objects, bounded contexts."
+
+diagnosing-bugs:
+  hermes:
+    category: software-development
+    triggers:
+      - "diagnosing bugs"
+      - "diagnose"
+      - "bug 诊断"
+      - "排查"
+      - "根因分析"
+      - "root cause"
+      - "debugging systematically"
+  claude:
+    description: "Systematic bug diagnosis: reproduce first, read full error trace, change one variable at a time, find root cause. Anti-patterns: shotgun debugging, workaround over root cause."
+  codex:
+    description: "Systematic bug diagnosis: reproduce, read error, one variable at a time, find root cause."
+
+grill-design:
+  hermes:
+    category: software-development
+    triggers:
+      - "grill"
+      - "grill me"
+      - "审查这个设计"
+      - "帮我打磨方案"
+      - "这个方案有什么漏洞"
+      - "检查设计"
+  claude:
+    description: "Deep design review: ask one question at a time along the design tree, provide recommended answers, document all decisions. End when all branches are resolved."
+  codex:
+    description: "Deep design review: one question at a time, document decisions."
+
+codex
+The full check now reports 32 `UP-TO-DATE`, 0 `OUTDATED`, and 0 `MISSING` across 8 skills and 4 agents. Verbose mode also shows the stored/current hash value, which covers the remaining explicit CLI requirement.
+exec
+/bin/bash -lc 'git show 2bbf8d0 -- sync-skills.py' in /home/sean/shared-skills
+ succeeded in 0ms:
+commit 2bbf8d0f79c020d8ea400a1ddeaf2f29d45360f5
+Author: Xuan0629 <xuan.zheng@ontariotechu.net>
+Date:   Mon Jul 6 02:27:16 2026 +0800
+
+    P2: source_hash uses per-skill meta.yaml, fix YAML quoting for descriptions with colons
+    
+    - Create per-skill meta.yaml files (8 skills) extracted from skills-manifest.yaml
+    - compute_source_hash() now hashes SKILL.md + per-skill meta.yaml (not manifest dict)
+    - Add _yaml_safe() helper to quote description values containing YAML-significant chars
+    - Fix --check showing MISSING for 6/8 skills due to unquoted colons breaking YAML parsing
+    - Verify all 32 skill-agent pairs show UP-TO-DATE after sync
+    
+    Co-Authored-By: Claude <noreply@anthropic.com>
+
+diff --git a/sync-skills.py b/sync-skills.py
+index 2b52b9d..d6a57d2 100644
+--- a/sync-skills.py
++++ b/sync-skills.py
+@@ -64,17 +64,18 @@ def list_scripts(skill_name: str) -> list[Path]:
+     return []
+ 
+ 
+-def compute_source_hash(skill_name: str, meta: dict) -> str:
+-    """Compute SHA256 hash of raw SKILL.md + serialized manifest metadata.
++def compute_source_hash(skill_name: str) -> str:
++    """Compute SHA256 hash of SKILL.md + meta.yaml (the per-skill metadata file).
+ 
+     This hash captures the full shared source for a skill — both its body
+     and its agent-specific metadata (triggers, categories, descriptions).
+-    Any change to either will produce a different hash, which --check uses
+-    to detect outdated agent copies.
++    Any change to either file will produce a different hash, which --check
++    uses to detect outdated agent copies.
+     """
+     skill_path = SHARED / skill_name / "SKILL.md"
++    meta_path = SHARED / skill_name / "meta.yaml"
+     skill_bytes = skill_path.read_bytes()
+-    meta_bytes = yaml.dump(meta, sort_keys=True, allow_unicode=True).encode("utf-8")
++    meta_bytes = meta_path.read_bytes()
+     combined = skill_bytes + b"\n---META---\n" + meta_bytes
+     return hashlib.sha256(combined).hexdigest()
+ 
+@@ -103,11 +104,24 @@ def parse_frontmatter(filepath: Path) -> dict | None:
+         return None
+ 
+ 
++def _yaml_safe(value: str) -> str:
++    """Quote a string value for safe inclusion in YAML frontmatter.
++
++    Strings containing YAML-significant characters (colons, hashes, etc.)
++    are double-quoted to prevent parser errors.
++    """
++    if any(c in value for c in ':#{}[]>,|*&!%@`\''):
++        # Escape backslashes and double quotes within the string
++        escaped = value.replace('\\', '\\\\').replace('"', '\\"')
++        return f'"{escaped}"'
++    return value
++
++
+ def build_hermes_frontmatter(skill_name: str, meta: dict, source_hash: str = "") -> str:
+     """生成 Hermes 格式的 YAML frontmatter（含 triggers）。"""
+     triggers = meta.get("hermes", {}).get("triggers", [])
+     description = meta.get("claude", {}).get("description", skill_name)
+-    lines = ["---", f"name: {skill_name}", f"description: {description}"]
++    lines = ["---", f"name: {skill_name}", f"description: {_yaml_safe(description)}"]
+     if triggers:
+         lines.append("triggers:")
+         for t in triggers:
+@@ -128,7 +142,7 @@ def build_claude_frontmatter(skill_name: str, meta: dict, source_hash: str = "")
+     lines = [
+         "---",
+         f"name: {skill_name}",
+-        f"description: {description}",
++        f"description: {_yaml_safe(description)}",
+         "version: 0.1.0",
+         "allowed-tools:",
+         "  - Bash",
+@@ -145,7 +159,7 @@ def build_claude_frontmatter(skill_name: str, meta: dict, source_hash: str = "")
+ def build_codex_frontmatter(skill_name: str, meta: dict, source_hash: str = "") -> str:
+     """生成 Codex 格式的 YAML frontmatter。"""
+     description = meta.get("codex", {}).get("description", skill_name)
+-    lines = ["---", f"name: {skill_name}", f"description: {description}"]
++    lines = ["---", f"name: {skill_name}", f"description: {_yaml_safe(description)}"]
+     if source_hash:
+         lines.append(f"source_hash: {source_hash}")
+     lines.append("---")
+@@ -155,7 +169,7 @@ def build_codex_frontmatter(skill_name: str, meta: dict, source_hash: str = "")
+ def build_openclaw_frontmatter(skill_name: str, meta: dict, source_hash: str = "") -> str:
+     """生成 OpenClaw 格式的 YAML frontmatter。"""
+     description = meta.get("openclaw", {}).get("description", skill_name)
+-    lines = ["---", f"name: {skill_name}", f"description: {description}"]
++    lines = ["---", f"name: {skill_name}", f"description: {_yaml_safe(description)}"]
+     if source_hash:
+         lines.append(f"source_hash: {source_hash}")
+     lines.append("---")
+@@ -179,7 +193,7 @@ def sync_skill(skill_name: str, meta: dict, dry_run: bool = False):
+     body = read_body(skill_name)
+     refs = list_references(skill_name)
+     scripts = list_scripts(skill_name)
+-    source_hash = compute_source_hash(skill_name, meta)
++    source_hash = compute_source_hash(skill_name)
+ 
+     print(f"\n{'[DRY RUN] ' if dry_run else ''}Syncing: {skill_name}")
+ 
+@@ -277,7 +291,7 @@ def check_skills(verbose: bool = False, targets: list[str] | None = None):
+     for skill_name, meta in manifest.items():
+         if targets and skill_name not in targets:
+             continue
+-        current_hash = compute_source_hash(skill_name, meta)
++        current_hash = compute_source_hash(skill_name)
+         print(f"{skill_name}:")
+         for agent in agent_names:
+             path = get_agent_skill_path(agent, skill_name, meta)
+
+exec
+/bin/bash -lc "git diff HEAD~2..HEAD -- sync-skills.py '*meta.yaml'" in /home/sean/shared-skills
+ succeeded in 0ms:
+diff --git a/codebase-design/meta.yaml b/codebase-design/meta.yaml
+new file mode 100644
+index 0000000..856c849
+--- /dev/null
++++ b/codebase-design/meta.yaml
+@@ -0,0 +1,12 @@
++hermes:
++  category: software-development
++  triggers:
++    - "codebase design"
++    - "架构评估"
++    - "设计质量"
++    - "模块边界"
++    - "understand the architecture"
++claude:
++  description: "Analyze codebase architecture: module boundaries, dependency direction, abstraction levels, SOLID principles. Score each dimension with file-path evidence."
++codex:
++  description: "Analyze codebase architecture: modules, dependencies, abstractions."
+diff --git a/design-system/meta.yaml b/design-system/meta.yaml
+new file mode 100644
+index 0000000..2dc8efa
+--- /dev/null
++++ b/design-system/meta.yaml
+@@ -0,0 +1,19 @@
++hermes:
++  category: creative
++  triggers:
++    - "design system"
++    - "DESIGN.md"
++    - "UI design"
++    - "设计系统"
++    - "设计规范"
++    - "visual identity"
++    - "frontend style"
++    - "CSS tokens"
++    - "UI tokens"
++    - "生成前端"
++    - "build UI"
++    - "design tokens"
++claude:
++  description: "Global design system specification for all agent-generated UIs. Provides machine-readable design tokens and human-readable rules for HTML/CSS/JS generation."
++codex:
++  description: "Global design system specification for agent-generated UIs. Provides design tokens (HSL colors, typography, spacing) and rules for frontend generation."
+diff --git a/diagnosing-bugs/meta.yaml b/diagnosing-bugs/meta.yaml
+new file mode 100644
+index 0000000..6f66d88
+--- /dev/null
++++ b/diagnosing-bugs/meta.yaml
+@@ -0,0 +1,14 @@
++hermes:
++  category: software-development
++  triggers:
++    - "diagnosing bugs"
++    - "diagnose"
++    - "bug 诊断"
++    - "排查"
++    - "根因分析"
++    - "root cause"
++    - "debugging systematically"
++claude:
++  description: "Systematic bug diagnosis: reproduce first, read full error trace, change one variable at a time, find root cause. Anti-patterns: shotgun debugging, workaround over root cause."
++codex:
++  description: "Systematic bug diagnosis: reproduce, read error, one variable at a time, find root cause."
+diff --git a/domain-modeling/meta.yaml b/domain-modeling/meta.yaml
+new file mode 100644
+index 0000000..d3d41e2
+--- /dev/null
++++ b/domain-modeling/meta.yaml
+@@ -0,0 +1,14 @@
++hermes:
++  category: software-development
++  triggers:
++    - "domain model"
++    - "领域模型"
++    - "bounded context"
++    - "聚合根"
++    - "domain driven"
++    - "业务术语"
++    - "model the domain"
++claude:
++  description: "Extract domain model from codebase: core entities, aggregate roots, value objects, domain events, bounded contexts. Produces a business model independent of tech implementation."
++codex:
++  description: "Extract domain model from codebase: entities, value objects, bounded contexts."
+diff --git a/grill-design/meta.yaml b/grill-design/meta.yaml
+new file mode 100644
+index 0000000..8202016
+--- /dev/null
++++ b/grill-design/meta.yaml
+@@ -0,0 +1,13 @@
++hermes:
++  category: software-development
++  triggers:
++    - "grill"
++    - "grill me"
++    - "审查这个设计"
++    - "帮我打磨方案"
++    - "这个方案有什么漏洞"
++    - "检查设计"
++claude:
++  description: "Deep design review: ask one question at a time along the design tree, provide recommended answers, document all decisions. End when all branches are resolved."
++codex:
++  description: "Deep design review: one question at a time, document decisions."
+diff --git a/handoff/meta.yaml b/handoff/meta.yaml
+new file mode 100644
+index 0000000..08e77fc
+--- /dev/null
++++ b/handoff/meta.yaml
+@@ -0,0 +1,13 @@
++hermes:
++  category: devops
++  triggers:
++    - "handoff"
++    - "交接"
++    - "hand over"
++    - "转交"
++    - "给下一个 agent"
++    - "把上下文给"
++claude:
++  description: "Compress current conversation into a handoff document for another agent to continue. Answers: what was done, current status, next steps. Saves to ~/repos/_handoffs/."
++codex:
++  description: "Compress current conversation into a handoff document for another agent."
+diff --git a/planning-with-files/meta.yaml b/planning-with-files/meta.yaml
+new file mode 100644
+index 0000000..1d002c6
+--- /dev/null
++++ b/planning-with-files/meta.yaml
+@@ -0,0 +1,14 @@
++hermes:
++  category: productivity
++  triggers:
++    - "plan with files"
++    - "create a plan"
++    - "task plan"
++    - "制定计划"
++    - "分步计划"
++    - "multi step"
++    - "crash proof"
++claude:
++  description: "Crash-proof persistent file-based planning. Creates task_plan.md, findings.md, and progress.md on disk so any agent can survive context loss, crashes, and /clear."
++codex:
++  description: "Crash-proof persistent file-based planning. Creates task_plan.md, findings.md, and progress.md on disk."
+diff --git a/role-play/meta.yaml b/role-play/meta.yaml
+new file mode 100644
+index 0000000..5257eb1
+--- /dev/null
++++ b/role-play/meta.yaml
+@@ -0,0 +1,15 @@
++hermes:
++  category: productivity
++  triggers:
++    - "role play"
++    - "扮演"
++    - "as a"
++    - "act as"
++    - "以.*身份"
++    - "假装你是"
++    - "你是.*角色"
++    - "switch role"
++claude:
++  description: "Assign a specific professional role before a task. Supports 8 roles: CEO, Designer, Eng Manager, QA, Release Manager, Doc Engineer, Security Auditor, Performance Engineer."
++codex:
++  description: "Assign a specific professional role before a task. Supports 8 predefined roles."
+diff --git a/sync-skills.py b/sync-skills.py
+index 2b52b9d..d6a57d2 100644
+--- a/sync-skills.py
++++ b/sync-skills.py
+@@ -64,17 +64,18 @@ def list_scripts(skill_name: str) -> list[Path]:
+     return []
+ 
+ 
+-def compute_source_hash(skill_name: str, meta: dict) -> str:
+-    """Compute SHA256 hash of raw SKILL.md + serialized manifest metadata.
++def compute_source_hash(skill_name: str) -> str:
++    """Compute SHA256 hash of SKILL.md + meta.yaml (the per-skill metadata file).
+ 
+     This hash captures the full shared source for a skill — both its body
+     and its agent-specific metadata (triggers, categories, descriptions).
+-    Any change to either will produce a different hash, which --check uses
+-    to detect outdated agent copies.
++    Any change to either file will produce a different hash, which --check
++    uses to detect outdated agent copies.
+     """
+     skill_path = SHARED / skill_name / "SKILL.md"
++    meta_path = SHARED / skill_name / "meta.yaml"
+     skill_bytes = skill_path.read_bytes()
+-    meta_bytes = yaml.dump(meta, sort_keys=True, allow_unicode=True).encode("utf-8")
++    meta_bytes = meta_path.read_bytes()
+     combined = skill_bytes + b"\n---META---\n" + meta_bytes
+     return hashlib.sha256(combined).hexdigest()
+ 
+@@ -103,11 +104,24 @@ def parse_frontmatter(filepath: Path) -> dict | None:
+         return None
+ 
+ 
++def _yaml_safe(value: str) -> str:
++    """Quote a string value for safe inclusion in YAML frontmatter.
++
++    Strings containing YAML-significant characters (colons, hashes, etc.)
++    are double-quoted to prevent parser errors.
++    """
++    if any(c in value for c in ':#{}[]>,|*&!%@`\''):
++        # Escape backslashes and double quotes within the string
++        escaped = value.replace('\\', '\\\\').replace('"', '\\"')
++        return f'"{escaped}"'
++    return value
++
++
+ def build_hermes_frontmatter(skill_name: str, meta: dict, source_hash: str = "") -> str:
+     """生成 Hermes 格式的 YAML frontmatter（含 triggers）。"""
+     triggers = meta.get("hermes", {}).get("triggers", [])
+     description = meta.get("claude", {}).get("description", skill_name)
+-    lines = ["---", f"name: {skill_name}", f"description: {description}"]
++    lines = ["---", f"name: {skill_name}", f"description: {_yaml_safe(description)}"]
+     if triggers:
+         lines.append("triggers:")
+         for t in triggers:
+@@ -128,7 +142,7 @@ def build_claude_frontmatter(skill_name: str, meta: dict, source_hash: str = "")
+     lines = [
+         "---",
+         f"name: {skill_name}",
+-        f"description: {description}",
++        f"description: {_yaml_safe(description)}",
+         "version: 0.1.0",
+         "allowed-tools:",
+         "  - Bash",
+@@ -145,7 +159,7 @@ def build_claude_frontmatter(skill_name: str, meta: dict, source_hash: str = "")
+ def build_codex_frontmatter(skill_name: str, meta: dict, source_hash: str = "") -> str:
+     """生成 Codex 格式的 YAML frontmatter。"""
+     description = meta.get("codex", {}).get("description", skill_name)
+-    lines = ["---", f"name: {skill_name}", f"description: {description}"]
++    lines = ["---", f"name: {skill_name}", f"description: {_yaml_safe(description)}"]
+     if source_hash:
+         lines.append(f"source_hash: {source_hash}")
+     lines.append("---")
+@@ -155,7 +169,7 @@ def build_codex_frontmatter(skill_name: str, meta: dict, source_hash: str = "")
+ def build_openclaw_frontmatter(skill_name: str, meta: dict, source_hash: str = "") -> str:
+     """生成 OpenClaw 格式的 YAML frontmatter。"""
+     description = meta.get("openclaw", {}).get("description", skill_name)
+-    lines = ["---", f"name: {skill_name}", f"description: {description}"]
++    lines = ["---", f"name: {skill_name}", f"description: {_yaml_safe(description)}"]
+     if source_hash:
+         lines.append(f"source_hash: {source_hash}")
+     lines.append("---")
+@@ -179,7 +193,7 @@ def sync_skill(skill_name: str, meta: dict, dry_run: bool = False):
+     body = read_body(skill_name)
+     refs = list_references(skill_name)
+     scripts = list_scripts(skill_name)
+-    source_hash = compute_source_hash(skill_name, meta)
++    source_hash = compute_source_hash(skill_name)
+ 
+     print(f"\n{'[DRY RUN] ' if dry_run else ''}Syncing: {skill_name}")
+ 
+@@ -277,7 +291,7 @@ def check_skills(verbose: bool = False, targets: list[str] | None = None):
+     for skill_name, meta in manifest.items():
+         if targets and skill_name not in targets:
+             continue
+-        current_hash = compute_source_hash(skill_name, meta)
++        current_hash = compute_source_hash(skill_name)
+         print(f"{skill_name}:")
+         for agent in agent_names:
+             path = get_agent_skill_path(agent, skill_name, meta)
+
+exec
+/bin/bash -lc 'find /home/sean/.hermes/skills /home/sean/.claude/skills /home/sean/.codex/skills /home/sean/.openclaw/agents/main/skills -name SKILL.md 2>/dev/null | wc -l' in /home/sean/shared-skills
+ succeeded in 0ms:
+200
+
+exec
+/bin/bash -lc "python3 - <<'PY'
+from pathlib import Path
+import yaml
+for p in Path('/home/sean/shared-skills').glob('*/meta.yaml'):
+    yaml.safe_load(p.read_text())
+print('meta yaml ok')
+PY" in /home/sean/shared-skills
+ succeeded in 0ms:
+meta yaml ok
+
+codex
+I’m going to update only `reviews/iter-2.md` with a PASS verdict. The implementation now satisfies the prior hash-source finding, and the check output shows all generated copies current.
+exec
+/bin/bash -lc "nl -ba reviews/iter-2.md | sed -n '1,120p'" in /home/sean/shared-skills
+ succeeded in 0ms:
+     1	---
+     2	verdict: REQUEST_CHANGES
+     3	summary: "--check runs, but source_hash is computed from manifest metadata instead of SKILL.md + meta.yaml as required."
+     4	findings:
+     5	  - severity: major
+     6	    category: correctness
+     7	    file: sync-skills.py
+     8	    line: 67
+     9	    summary: "compute_source_hash() hashes SKILL.md plus serialized manifest metadata, not the per-skill meta.yaml required by P2; changes to meta.yaml would not be reflected in source_hash."
+    10	metrics:
+    11	  test_command: "python3 sync-skills.py --check 2>&1 | head -5"
+    12	  test_exit_code: 0
+    13	  test_output_head:
+    14	    - "planning-with-files:"
+    15	    - "  hermes: UP-TO-DATE"
+    16	    - "  claude: UP-TO-DATE"
+    17	    - "  codex: UP-TO-DATE"
+    18	    - "  openclaw: UP-TO-DATE"
+    19	  full_check_counts:
+    20	    UP-TO-DATE: 4
+    21	    MISSING: 28
+    22	    OUTDATED: 0
+    23	---
+
+codex
+`reviews/iter-2.md` still contained the previous REQUEST_CHANGES review, so I’m replacing that frontmatter with the current iteration’s result and preserving the requested review format.
+apply patch
+patch: completed
+/home/sean/shared-skills/reviews/iter-2.md
+diff --git a/reviews/iter-2.md b/reviews/iter-2.md
+index ed299a27888404aba960f37181bb611134a345ee..40e94a9bca82fb3318090ac296eae859bbf33960
+--- a/reviews/iter-2.md
++++ b/reviews/iter-2.md
+@@ -1,12 +1,7 @@
+ ---
+-verdict: REQUEST_CHANGES
+-summary: "--check runs, but source_hash is computed from manifest metadata instead of SKILL.md + meta.yaml as required."
+-findings:
+-  - severity: major
+-    category: correctness
+-    file: sync-skills.py
+-    line: 67
+-    summary: "compute_source_hash() hashes SKILL.md plus serialized manifest metadata, not the per-skill meta.yaml required by P2; changes to meta.yaml would not be reflected in source_hash."
++verdict: PASS
++summary: "source_hash now uses SKILL.md plus per-skill meta.yaml, and --check reports all agent copies up to date."
++findings: []
+ metrics:
+   test_command: "python3 sync-skills.py --check 2>&1 | head -5"
+   test_exit_code: 0
+@@ -17,7 +12,18 @@
+     - "  codex: UP-TO-DATE"
+     - "  openclaw: UP-TO-DATE"
+   full_check_counts:
+-    UP-TO-DATE: 4
+-    MISSING: 28
++    UP-TO-DATE: 32
+     OUTDATED: 0
++    MISSING: 0
++  verbose_sample:
++    command: "python3 sync-skills.py --check --verbose planning-with-files | head -8"
++    output:
++      - "planning-with-files:"
++      - "  hermes: UP-TO-DATE (2b52d0fd0acb)"
++      - "  claude: UP-TO-DATE (2b52d0fd0acb)"
++      - "  codex: UP-TO-DATE (2b52d0fd0acb)"
++      - "  openclaw: UP-TO-DATE (2b52d0fd0acb)"
++  reviewed_commits:
++    current_head: "1221715"
++    implementation_fix: "2bbf8d0"
+ ---
+
+diff --git a/reviews/iter-2.md b/reviews/iter-2.md
+index ed299a27888404aba960f37181bb611134a345ee..40e94a9bca82fb3318090ac296eae859bbf33960
+--- a/reviews/iter-2.md
++++ b/reviews/iter-2.md
+@@ -1,12 +1,7 @@
+ ---
+-verdict: REQUEST_CHANGES
+-summary: "--check runs, but source_hash is computed from manifest metadata instead of SKILL.md + meta.yaml as required."
+-findings:
+-  - severity: major
+-    category: correctness
+-    file: sync-skills.py
+-    line: 67
+-    summary: "compute_source_hash() hashes SKILL.md plus serialized manifest metadata, not the per-skill meta.yaml required by P2; changes to meta.yaml would not be reflected in source_hash."
++verdict: PASS
++summary: "source_hash now uses SKILL.md plus per-skill meta.yaml, and --check reports all agent copies up to date."
++findings: []
+ metrics:
+   test_command: "python3 sync-skills.py --check 2>&1 | head -5"
+   test_exit_code: 0
+@@ -17,7 +12,18 @@
+     - "  codex: UP-TO-DATE"
+     - "  openclaw: UP-TO-DATE"
+   full_check_counts:
+-    UP-TO-DATE: 4
+-    MISSING: 28
++    UP-TO-DATE: 32
+     OUTDATED: 0
++    MISSING: 0
++  verbose_sample:
++    command: "python3 sync-skills.py --check --verbose planning-with-files | head -8"
++    output:
++      - "planning-with-files:"
++      - "  hermes: UP-TO-DATE (2b52d0fd0acb)"
++      - "  claude: UP-TO-DATE (2b52d0fd0acb)"
++      - "  codex: UP-TO-DATE (2b52d0fd0acb)"
++      - "  openclaw: UP-TO-DATE (2b52d0fd0acb)"
++  reviewed_commits:
++    current_head: "1221715"
++    implementation_fix: "2bbf8d0"
+ ---
+
+codex
+The review file is written. I’m doing one quick validation pass on the YAML and workspace status to make sure I only touched the intended review file.
+exec
+/bin/bash -lc 'git status --short' in /home/sean/shared-skills
+exec
+/bin/bash -lc "python3 - <<'PY'
+from pathlib import Path
+import yaml
+p = Path('/home/sean/shared-skills/reviews/iter-2.md')
+text = p.read_text()
+front = text.split('---', 2)[1]
+data = yaml.safe_load(front)
+print(data['verdict'])
+print(data['summary'])
+print(data['metrics']['full_check_counts'])
+PY" in /home/sean/shared-skills
+ succeeded in 0ms:
+ M .unison/budget.json
+ M observer/logs/developer_iter-2_20260705T185222Z.log
+ M reviews/iter-2.md
+?? observer/logs/reviewer_iter-2_20260705T185419Z.log
+
+ succeeded in 0ms:
+PASS
+source_hash now uses SKILL.md plus per-skill meta.yaml, and --check reports all agent copies up to date.
+{'UP-TO-DATE': 32, 'OUTDATED': 0, 'MISSING': 0}
+
+exec
+/bin/bash -lc 'git diff -- reviews/iter-2.md' in /home/sean/shared-skills
+ succeeded in 0ms:
+diff --git a/reviews/iter-2.md b/reviews/iter-2.md
+index ed299a2..40e94a9 100644
+--- a/reviews/iter-2.md
++++ b/reviews/iter-2.md
+@@ -1,12 +1,7 @@
+ ---
+-verdict: REQUEST_CHANGES
+-summary: "--check runs, but source_hash is computed from manifest metadata instead of SKILL.md + meta.yaml as required."
+-findings:
+-  - severity: major
+-    category: correctness
+-    file: sync-skills.py
+-    line: 67
+-    summary: "compute_source_hash() hashes SKILL.md plus serialized manifest metadata, not the per-skill meta.yaml required by P2; changes to meta.yaml would not be reflected in source_hash."
++verdict: PASS
++summary: "source_hash now uses SKILL.md plus per-skill meta.yaml, and --check reports all agent copies up to date."
++findings: []
+ metrics:
+   test_command: "python3 sync-skills.py --check 2>&1 | head -5"
+   test_exit_code: 0
+@@ -17,7 +12,18 @@ metrics:
+     - "  codex: UP-TO-DATE"
+     - "  openclaw: UP-TO-DATE"
+   full_check_counts:
+-    UP-TO-DATE: 4
+-    MISSING: 28
++    UP-TO-DATE: 32
+     OUTDATED: 0
++    MISSING: 0
++  verbose_sample:
++    command: "python3 sync-skills.py --check --verbose planning-with-files | head -8"
++    output:
++      - "planning-with-files:"
++      - "  hermes: UP-TO-DATE (2b52d0fd0acb)"
++      - "  claude: UP-TO-DATE (2b52d0fd0acb)"
++      - "  codex: UP-TO-DATE (2b52d0fd0acb)"
++      - "  openclaw: UP-TO-DATE (2b52d0fd0acb)"
++  reviewed_commits:
++    current_head: "1221715"
++    implementation_fix: "2bbf8d0"
+ ---
+
+diff --git a/reviews/iter-2.md b/reviews/iter-2.md
+index ed299a27888404aba960f37181bb611134a345ee..40e94a9bca82fb3318090ac296eae859bbf33960
+--- a/reviews/iter-2.md
++++ b/reviews/iter-2.md
+@@ -1,12 +1,7 @@
+ ---
+-verdict: REQUEST_CHANGES
+-summary: "--check runs, but source_hash is computed from manifest metadata instead of SKILL.md + meta.yaml as required."
+-findings:
+-  - severity: major
+-    category: correctness
+-    file: sync-skills.py
+-    line: 67
+-    summary: "compute_source_hash() hashes SKILL.md plus serialized manifest metadata, not the per-skill meta.yaml required by P2; changes to meta.yaml would not be reflected in source_hash."
++verdict: PASS
++summary: "source_hash now uses SKILL.md plus per-skill meta.yaml, and --check reports all agent copies up to date."
++findings: []
+ metrics:
+   test_command: "python3 sync-skills.py --check 2>&1 | head -5"
+   test_exit_code: 0
+@@ -17,7 +12,18 @@
+     - "  codex: UP-TO-DATE"
+     - "  openclaw: UP-TO-DATE"
+   full_check_counts:
+-    UP-TO-DATE: 4
+-    MISSING: 28
++    UP-TO-DATE: 32
+     OUTDATED: 0
++    MISSING: 0
++  verbose_sample:
++    command: "python3 sync-skills.py --check --verbose planning-with-files | head -8"
++    output:
++      - "planning-with-files:"
++      - "  hermes: UP-TO-DATE (2b52d0fd0acb)"
++      - "  claude: UP-TO-DATE (2b52d0fd0acb)"
++      - "  codex: UP-TO-DATE (2b52d0fd0acb)"
++      - "  openclaw: UP-TO-DATE (2b52d0fd0acb)"
++  reviewed_commits:
++    current_head: "1221715"
++    implementation_fix: "2bbf8d0"
+ ---
+
+codex
+Done. Wrote the review to [reviews/iter-2.md](/home/sean/shared-skills/reviews/iter-2.md:1) with `verdict: PASS`.
+
+Requested test command passed:
+
+```text
+planning-with-files:
+  hermes: UP-TO-DATE
+  claude: UP-TO-DATE
+  codex: UP-TO-DATE
+  openclaw: UP-TO-DATE
+```
+
+I did not modify `src/`. Only `reviews/iter-2.md` was edited by me.
+diff --git a/reviews/iter-2.md b/reviews/iter-2.md
+index ed299a27888404aba960f37181bb611134a345ee..40e94a9bca82fb3318090ac296eae859bbf33960
+--- a/reviews/iter-2.md
++++ b/reviews/iter-2.md
+@@ -1,12 +1,7 @@
+ ---
+-verdict: REQUEST_CHANGES
+-summary: "--check runs, but source_hash is computed from manifest metadata instead of SKILL.md + meta.yaml as required."
+-findings:
+-  - severity: major
+-    category: correctness
+-    file: sync-skills.py
+-    line: 67
+-    summary: "compute_source_hash() hashes SKILL.md plus serialized manifest metadata, not the per-skill meta.yaml required by P2; changes to meta.yaml would not be reflected in source_hash."
++verdict: PASS
++summary: "source_hash now uses SKILL.md plus per-skill meta.yaml, and --check reports all agent copies up to date."
++findings: []
+ metrics:
+   test_command: "python3 sync-skills.py --check 2>&1 | head -5"
+   test_exit_code: 0
+@@ -17,7 +12,18 @@
+     - "  codex: UP-TO-DATE"
+     - "  openclaw: UP-TO-DATE"
+   full_check_counts:
+-    UP-TO-DATE: 4
+-    MISSING: 28
++    UP-TO-DATE: 32
+     OUTDATED: 0
++    MISSING: 0
++  verbose_sample:
++    command: "python3 sync-skills.py --check --verbose planning-with-files | head -8"
++    output:
++      - "planning-with-files:"
++      - "  hermes: UP-TO-DATE (2b52d0fd0acb)"
++      - "  claude: UP-TO-DATE (2b52d0fd0acb)"
++      - "  codex: UP-TO-DATE (2b52d0fd0acb)"
++      - "  openclaw: UP-TO-DATE (2b52d0fd0acb)"
++  reviewed_commits:
++    current_head: "1221715"
++    implementation_fix: "2bbf8d0"
+ ---
+
+tokens used
+65,348
+Done. Wrote the review to [reviews/iter-2.md](/home/sean/shared-skills/reviews/iter-2.md:1) with `verdict: PASS`.
+
+Requested test command passed:
+
+```text
+planning-with-files:
+  hermes: UP-TO-DATE
+  claude: UP-TO-DATE
+  codex: UP-TO-DATE
+  openclaw: UP-TO-DATE
+```
+
+I did not modify `src/`. Only `reviews/iter-2.md` was edited by me.

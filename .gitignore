@@ -1,1 +1,2 @@
 webui/data.json
+__pycache__/\n*.pyc\nobserver/logs/\n.unison/budget.json\n.unison/run.log

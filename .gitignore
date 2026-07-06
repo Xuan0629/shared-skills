@@ -2,11 +2,20 @@ webui/data.json
 __pycache__/
 *.pyc
 observer/logs/
-.unison/budget.json
-.unison/run.log
+.unison/
 # Review files and build artifacts
 review-*.md
 review-*.json
 webui-build.log
 reviews/
 sync_skills.py
+# Hygiene
+*.log
+.DS_Store
+node_modules/
+.env
+.env.*
+auth.json
+*.pem
+dist/
+*.egg-info/

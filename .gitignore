@@ -1,2 +1,12 @@
 webui/data.json
-__pycache__/\n*.pyc\nobserver/logs/\n.unison/budget.json\n.unison/run.log
+__pycache__/
+*.pyc
+observer/logs/
+.unison/budget.json
+.unison/run.log
+# Review files and build artifacts
+review-*.md
+review-*.json
+webui-build.log
+reviews/
+sync_skills.py

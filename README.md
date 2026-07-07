@@ -1,10 +1,33 @@
-# Shared Skills · 共享 Skill 管理系统
+# Shared Skills
 
 [**English**](README.md) | [中文](README_CN.md)
 
-> Single source of truth, multi-agent sync — update once, take effect everywhere: Claude Code / Codex / Hermes / OpenClaw.
+<p align="center">
+  <a href="https://github.com/Xuan0629/shared-skills/stargazers"><img src="https://img.shields.io/github/stars/Xuan0629/shared-skills?style=social" alt="stars"></a>
+  <a href="https://github.com/Xuan0629/shared-skills/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT"></a>
+  <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.10%2B-blue" alt="Python 3.10+"></a>
+  <a href="https://github.com/Xuan0629/unison"><img src="https://img.shields.io/badge/companion-Unison-gold" alt="Unison companion"></a>
+</p>
 
-When multiple AI agents collaborate, skills must stay consistent across every agent. Manual copying causes version drift and degrades review quality. shared-skills solves this.
+> **One source. Every agent. Zero drift.**
+
+**shared-skills** is the skill sync layer for multi-agent workflows. Write a skill once — sync-skills.py converts and deploys it to Claude Code, Codex, Hermes, and OpenClaw simultaneously. Zero external dependencies. Pure Python. 4-agent format conversion.
+
+<p align="center"><b>
+  Linux ✅ &nbsp; macOS ✅ &nbsp; Windows ✅ &nbsp; | &nbsp; MIT &nbsp; | &nbsp; Python 3.10+
+</b></p>
+
+---
+
+## Quick Links
+
+| Start here | |
+|---|---|
+| [Installation](#installation) | Clone → sync |
+| [Usage](#usage) | sync / --check / --show-log / Web UI |
+| [How It Works](#how-it-works) | Source → format convert → deploy |
+| [Adding a Skill](#adding-a-new-skill) | 2 files: SKILL.md + meta.yaml |
+| [Unison](https://github.com/Xuan0629/unison) | Companion: multi-agent pipeline framework |
 
 ## Installation
 
